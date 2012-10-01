@@ -217,7 +217,7 @@ public class RocketActions {
 			panel.add(new StyledLabel(trans.get("RocketActions.lbl.Youcanchangedefop"),-2));
 
 			int ret = JOptionPane.showConfirmDialog(
-					parentFrame,
+					parentFrame.getRootWindow(),
 					new Object[] {
 					//// Delete the selected simulations?		
 					trans.get("RocketActions.showConfirmDialog.lbl1"),
@@ -369,10 +369,10 @@ public class RocketActions {
 		public void actionPerformed(ActionEvent e) {
 			if (isSimulationSelected()) {
 				deleteSimulationAction.actionPerformed(e);
-				parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
+				//parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
 			} else {
 				deleteComponentAction.actionPerformed(e);
-				parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
+				//parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
 			}
 		}
 
@@ -411,7 +411,7 @@ public class RocketActions {
 				document.addUndoPosition("Cut " + c.getComponentName());
 				OpenRocketClipboard.setClipboard(c.copy());
 				delete(c);
-				parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
+				//parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
 			} else if (isSimulationSelected()) {
 
 				Simulation[] simsCopy = new Simulation[sims.length];
@@ -423,7 +423,7 @@ public class RocketActions {
 				for (Simulation s: sims) {
 					document.removeSimulation(s);
 				}
-				parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
+				//parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
 			}
 		}
 
@@ -458,7 +458,7 @@ public class RocketActions {
 
 			if (isCopyable(c)) {
 				OpenRocketClipboard.setClipboard(c.copy());
-				parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
+				//parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
 			} else if (sims.length >= 0) {
 
 				Simulation[] simsCopy = new Simulation[sims.length];
@@ -466,7 +466,7 @@ public class RocketActions {
 					simsCopy[i] = sims[i].copy();
 				}
 				OpenRocketClipboard.setClipboard(simsCopy);
-				parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
+				//parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
 			}
 		}
 
@@ -511,7 +511,7 @@ public class RocketActions {
 				position.getU().addChild(pasted, position.getV());
 				selectionModel.setSelectedComponent(pasted);
 				
-				parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
+				//parentFrame.selectTab(BasicFrame.COMPONENT_TAB);
 				
 			} else if (sims != null) {
 				
@@ -528,7 +528,7 @@ public class RocketActions {
 				}
 				selectionModel.setSelectedSimulations(copySims.toArray(new Simulation[0]));
 				
-				parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
+				//parentFrame.selectTab(BasicFrame.SIMULATION_TAB);
 			}
 		}
 
@@ -563,7 +563,7 @@ public class RocketActions {
 			if (c == null)
 				return;
 			
-			ComponentConfigDialog.showDialog(parentFrame, document, c);
+			ComponentConfigDialog.showDialog(parentFrame.getRootWindow(), document, c);
 		}
 
 		@Override
@@ -603,7 +603,7 @@ public class RocketActions {
 			rocket.addChild(stage);
 			rocket.getDefaultConfiguration().setAllStages();
 			selectionModel.setSelectedComponent(stage);
-			ComponentConfigDialog.showDialog(parentFrame, document, stage);
+			ComponentConfigDialog.showDialog(parentFrame.getRootWindow(), document, stage);
 			
 		}
 

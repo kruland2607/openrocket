@@ -70,7 +70,7 @@ public final class MRUDesignFileAction extends JMenu {
         Action action = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 String command = e.getActionCommand();
-                if (BasicFrame.open(new File(command), parent)) {
+                if (DocumentManager.open(new File(command), parent)) {
                     MRUDesignFile.getInstance().addFile(command);
                 }
                 else {

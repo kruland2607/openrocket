@@ -1,13 +1,10 @@
 package net.sf.openrocket.gui.main;
 
 
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
@@ -24,6 +21,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -41,8 +39,6 @@ import net.sf.openrocket.gui.components.BasicSlider;
 import net.sf.openrocket.gui.components.DescriptionArea;
 import net.sf.openrocket.gui.components.SimulationExportPanel;
 import net.sf.openrocket.gui.components.UnitSelector;
-import net.sf.openrocket.gui.plot.Axis;
-import net.sf.openrocket.gui.plot.PlotConfiguration;
 import net.sf.openrocket.gui.plot.SimulationPlotPanel;
 import net.sf.openrocket.gui.util.GUIUtil;
 import net.sf.openrocket.gui.util.Icons;
@@ -50,28 +46,14 @@ import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.models.atmosphere.ExtendedISAModel;
 import net.sf.openrocket.rocketcomponent.Configuration;
 import net.sf.openrocket.simulation.FlightData;
-import net.sf.openrocket.simulation.FlightDataBranch;
-import net.sf.openrocket.simulation.FlightDataType;
 import net.sf.openrocket.simulation.RK4SimulationStepper;
 import net.sf.openrocket.simulation.SimulationOptions;
 import net.sf.openrocket.simulation.listeners.SimulationListener;
 import net.sf.openrocket.simulation.listeners.example.CSVSaveListener;
 import net.sf.openrocket.startup.Application;
-import net.sf.openrocket.unit.Unit;
 import net.sf.openrocket.unit.UnitGroup;
 import net.sf.openrocket.util.Chars;
 import net.sf.openrocket.util.GeodeticComputationStrategy;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.ValueMarker;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 
 
 public class SimulationEditDialog extends JDialog {
@@ -81,7 +63,7 @@ public class SimulationEditDialog extends JDialog {
 	public static final int PLOT = 2;
 	
 
-	private final Window parentWindow;
+	private final SimulationPanel parentWindow;
 	private final Simulation simulation;
 	private final OpenRocketDocument document;
 	private final SimulationOptions conditions;
@@ -89,13 +71,13 @@ public class SimulationEditDialog extends JDialog {
 	private static final Translator trans = Application.getTranslator();
 	
 	
-	public SimulationEditDialog(Window parent, OpenRocketDocument document, Simulation s) {
+	public SimulationEditDialog(SimulationPanel parent, OpenRocketDocument document, Simulation s) {
 		this(parent, document, s, 0);
 	}
 	
-	public SimulationEditDialog(Window parent, OpenRocketDocument document, Simulation s, int tab) {
+	public SimulationEditDialog(SimulationPanel parent, OpenRocketDocument document, Simulation s, int tab) {
 		//// Edit simulation
-		super(parent, trans.get("simedtdlg.title.Editsim"), JDialog.ModalityType.DOCUMENT_MODAL);
+		super(SwingUtilities.getWindowAncestor(parent), trans.get("simedtdlg.title.Editsim"), JDialog.ModalityType.DOCUMENT_MODAL);
 		this.document = document;
 		this.parentWindow = parent;
 		this.simulation = s;
@@ -171,7 +153,7 @@ public class SimulationEditDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				SimulationEditDialog.this.dispose();
-				SimulationRunDialog.runSimulations(parentWindow, SimulationEditDialog.this.document, simulation);
+				SimulationRunDialog.runSimulations(SwingUtilities.getWindowAncestor(parentWindow), SimulationEditDialog.this.document, simulation);
 			}
 		});
 		mainPanel.add(button, "gapright para");
@@ -816,7 +798,7 @@ public class SimulationEditDialog extends JDialog {
 			return noDataPanel();
 		}
 		
-		return new SimulationPlotPanel(simulation);
+		return new SimulationPlotPanel(parentWindow,simulation);
 	}
 	
 	
@@ -854,165 +836,6 @@ public class SimulationEditDialog extends JDialog {
 		return panel;
 	}
 	
-	
-	private void performPlot(PlotConfiguration config) {
-		
-		// Fill the auto-selections
-		FlightDataBranch branch = simulation.getSimulatedData().getBranch(0);
-		PlotConfiguration filled = config.fillAutoAxes(branch);
-		List<Axis> axes = filled.getAllAxes();
-		
-
-		// Create the data series for both axes
-		XYSeriesCollection[] data = new XYSeriesCollection[2];
-		data[0] = new XYSeriesCollection();
-		data[1] = new XYSeriesCollection();
-		
-
-		// Get the domain axis type
-		final FlightDataType domainType = filled.getDomainAxisType();
-		final Unit domainUnit = filled.getDomainAxisUnit();
-		if (domainType == null) {
-			throw new IllegalArgumentException("Domain axis type not specified.");
-		}
-		List<Double> x = branch.get(domainType);
-		
-
-		// Create the XYSeries objects from the flight data and store into the collections
-		int length = filled.getTypeCount();
-		String[] axisLabel = new String[2];
-		for (int i = 0; i < length; i++) {
-			// Get info
-			FlightDataType type = filled.getType(i);
-			Unit unit = filled.getUnit(i);
-			int axis = filled.getAxis(i);
-			String name = getLabel(type, unit);
-			
-			// Store data in provided units
-			List<Double> y = branch.get(type);
-			XYSeries series = new XYSeries(name, false, true);
-			for (int j = 0; j < x.size(); j++) {
-				series.add(domainUnit.toUnit(x.get(j)), unit.toUnit(y.get(j)));
-			}
-			data[axis].addSeries(series);
-			
-			// Update axis label
-			if (axisLabel[axis] == null)
-				axisLabel[axis] = type.getName();
-			else
-				axisLabel[axis] += "; " + type.getName();
-		}
-		
-
-		// Create the chart using the factory to get all default settings
-		JFreeChart chart = ChartFactory.createXYLineChart(
-				//// Simulated flight
-				trans.get("simedtdlg.chart.Simflight"),
-				null,
-				null,
-				null,
-				PlotOrientation.VERTICAL,
-				true,
-				true,
-				false
-				);
-		
-
-		// Add the data and formatting to the plot
-		XYPlot plot = chart.getXYPlot();
-		int axisno = 0;
-		for (int i = 0; i < 2; i++) {
-			// Check whether axis has any data
-			if (data[i].getSeriesCount() > 0) {
-				// Create and set axis
-				double min = axes.get(i).getMinValue();
-				double max = axes.get(i).getMaxValue();
-				NumberAxis axis = new PresetNumberAxis(min, max);
-				axis.setLabel(axisLabel[i]);
-				//				axis.setRange(axes.get(i).getMinValue(), axes.get(i).getMaxValue());
-				plot.setRangeAxis(axisno, axis);
-				
-				// Add data and map to the axis
-				plot.setDataset(axisno, data[i]);
-				plot.setRenderer(axisno, new StandardXYItemRenderer());
-				plot.mapDatasetToRangeAxis(axisno, axisno);
-				axisno++;
-			}
-		}
-		
-		plot.getDomainAxis().setLabel(getLabel(domainType, domainUnit));
-		plot.addDomainMarker(new ValueMarker(0));
-		plot.addRangeMarker(new ValueMarker(0));
-		
-
-		// Create the dialog
-		//// Simulation results
-		final JDialog dialog = new JDialog(this, trans.get("simedtdlg.dlg.Simres"));
-		dialog.setModalityType(ModalityType.DOCUMENT_MODAL);
-		
-		JPanel panel = new JPanel(new MigLayout("fill"));
-		dialog.add(panel);
-		
-		ChartPanel chartPanel = new ChartPanel(chart,
-				false, // properties
-				true, // save
-				false, // print
-				true, // zoom
-				true); // tooltips
-		chartPanel.setMouseWheelEnabled(true);
-		chartPanel.setEnforceFileExtensions(true);
-		chartPanel.setInitialDelay(500);
-		
-		chartPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-		
-		panel.add(chartPanel, "grow, wrap 20lp");
-		
-		//// Close button
-		JButton button = new JButton(trans.get("dlg.but.close"));
-		button.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dialog.setVisible(false);
-			}
-		});
-		panel.add(button, "right");
-		
-		dialog.setLocationByPlatform(true);
-		dialog.pack();
-		
-		GUIUtil.setDisposableDialogOptions(dialog, button);
-		
-		dialog.setVisible(true);
-	}
-	
-	
-	private class PresetNumberAxis extends NumberAxis {
-		private final double min;
-		private final double max;
-		
-		public PresetNumberAxis(double min, double max) {
-			this.min = min;
-			this.max = max;
-			autoAdjustRange();
-		}
-		
-		@Override
-		protected void autoAdjustRange() {
-			this.setRange(min, max);
-		}
-	}
-	
-	
-	private String getLabel(FlightDataType type, Unit unit) {
-		String name = type.getName();
-		if (unit != null && !UnitGroup.UNITS_NONE.contains(unit) &&
-				!UnitGroup.UNITS_COEFFICIENT.contains(unit) && unit.getUnit().length() > 0)
-			name += " (" + unit.getUnit() + ")";
-		return name;
-	}
-	
-	
-
 	private class ListenerCellRenderer extends JLabel implements ListCellRenderer {
 		
 		@Override

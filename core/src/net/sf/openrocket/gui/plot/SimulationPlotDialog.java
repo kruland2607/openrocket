@@ -7,7 +7,6 @@ import java.awt.Composite;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Line2D;
@@ -24,16 +23,14 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.gui.components.StyledLabel;
-import net.sf.openrocket.gui.util.GUIUtil;
+import net.sf.openrocket.gui.main.SimulationPanel;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.simulation.FlightDataBranch;
 import net.sf.openrocket.simulation.FlightDataType;
@@ -70,7 +67,13 @@ import org.jfree.ui.TextAnchor;
  * 
  * @author Sampo Niskanen <sampo.niskanen@iki.fi>
  */
-public class SimulationPlotDialog extends JDialog {
+public class SimulationPlotDialog extends JPanel {
+	
+	private String title;
+	
+	public String getTitle() {
+		return title;
+	}
 	
 	private static final float PLOT_STROKE_WIDTH = 1.5f;
 	private static final Translator trans = Application.getTranslator();
@@ -133,10 +136,10 @@ public class SimulationPlotDialog extends JDialog {
 	private final List<ModifiedXYItemRenderer> renderers =
 			new ArrayList<ModifiedXYItemRenderer>();
 	
-	private SimulationPlotDialog(Window parent, Simulation simulation, PlotConfiguration config) {
+	private SimulationPlotDialog(SimulationPanel parent, Simulation simulation, PlotConfiguration config) {
 		//// Flight data plot
-		super(parent, trans.get("PlotDialog.title.Flightdataplot"));
-		this.setModalityType(ModalityType.DOCUMENT_MODAL);
+		super(new MigLayout("fill"));
+		this.title = simulation.getName();
 		
 		final boolean initialShowPoints = Application.getPreferences().getBoolean(Preferences.PLOT_SHOW_POINTS, false);
 		
@@ -408,9 +411,6 @@ public class SimulationPlotDialog extends JDialog {
 
 		// Create the dialog
 		
-		JPanel panel = new JPanel(new MigLayout("fill"));
-		this.add(panel);
-		
 		ChartPanel chartPanel = new ChartPanel(chart,
 				false, // properties
 				true, // save
@@ -423,7 +423,7 @@ public class SimulationPlotDialog extends JDialog {
 		
 		chartPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 		
-		panel.add(chartPanel, "grow, wrap 20lp");
+		this.add(chartPanel, "grow, wrap 20lp");
 		
 		//// Show data points
 		final JCheckBox check = new JCheckBox(trans.get("PlotDialog.CheckBox.Showdatapoints"));
@@ -438,30 +438,15 @@ public class SimulationPlotDialog extends JDialog {
 				}
 			}
 		});
-		panel.add(check, "split, left");
+		this.add(check, "split, left");
 		
 
 		JLabel label = new StyledLabel(trans.get("PlotDialog.lbl.Chart"), -2);
-		panel.add(label, "gapleft para");
+		this.add(label, "gapleft para");
 		
 
-		panel.add(new JPanel(), "growx");
+		this.add(new JPanel(), "growx");
 		
-		//// Close button
-		JButton button = new JButton(trans.get("dlg.but.close"));
-		button.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				SimulationPlotDialog.this.dispose();
-			}
-		});
-		panel.add(button, "right");
-		
-		this.setLocationByPlatform(true);
-		this.pack();
-		
-		GUIUtil.setDisposableDialogOptions(this, button);
-		GUIUtil.rememberWindowSize(this);
 	}
 	
 	private String getLabel(FlightDataType type, Unit unit) {
@@ -498,8 +483,9 @@ public class SimulationPlotDialog extends JDialog {
 	 * @param simulation	the simulation to plot.
 	 * @param config		the configuration of the plot.
 	 */
-	public static void showPlot(Window parent, Simulation simulation, PlotConfiguration config) {
-		new SimulationPlotDialog(parent, simulation, config).setVisible(true);
+	public static void showPlot(SimulationPanel root, Simulation simulation, PlotConfiguration config) {
+		SimulationPlotDialog plot = new SimulationPlotDialog(root, simulation, config);
+		root.addPlot(plot);
 	}
 	
 	

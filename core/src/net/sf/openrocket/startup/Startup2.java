@@ -17,6 +17,7 @@ import net.sf.openrocket.database.ComponentPresetDatabase;
 import net.sf.openrocket.database.Databases;
 import net.sf.openrocket.gui.dialogs.UpdateInfoDialog;
 import net.sf.openrocket.gui.main.BasicFrame;
+import net.sf.openrocket.gui.main.DocumentManager;
 import net.sf.openrocket.gui.main.MRUDesignFile;
 import net.sf.openrocket.gui.main.Splash;
 import net.sf.openrocket.gui.main.SwingExceptionHandler;
@@ -147,7 +148,7 @@ public class Startup2 {
             else {
                 String lastFile = MRUDesignFile.getInstance().getLastEditedDesignFile();
                 if (lastFile != null) {
-                    if (!BasicFrame.open(new File(lastFile), null)) {
+        			if (!DocumentManager.open(new File(lastFile), null)) {
                         MRUDesignFile.getInstance().removeFile(lastFile);
                         BasicFrame.newAction();
                     }
@@ -251,7 +252,7 @@ public class Startup2 {
 		// Check command-line for files
 		boolean opened = false;
 		for (String file : args) {
-			if (BasicFrame.open(new File(file), null)) {
+			if (DocumentManager.open(new File(file), null)) {
 				opened = true;
 			}
 		}

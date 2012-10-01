@@ -1,11 +1,12 @@
 package net.sf.openrocket.gui.dialogs;
 
+import java.awt.Dialog;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -51,8 +52,8 @@ public class AboutDialog extends JDialog {
 			"JOGL (http://jogamp.org/jogl/www/)";
 	
 	
-	public AboutDialog(JFrame parent) {
-		super(parent, true);
+	public AboutDialog(Window parent) {
+		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
 		
 		final String version = BuildProperties.getVersion();
 		

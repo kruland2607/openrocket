@@ -17,12 +17,27 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import net.infonode.docking.RootWindow;
+import net.infonode.docking.TabWindow;
+import net.infonode.docking.View;
+import net.infonode.docking.properties.RootWindowProperties;
+import net.infonode.docking.theme.DockingWindowsTheme;
+import net.infonode.docking.theme.ShapedGradientDockingTheme;
+import net.infonode.docking.util.DockingUtil;
+import net.infonode.docking.util.PropertiesUtil;
+import net.infonode.docking.util.ViewMap;
+import net.infonode.tabbedpanel.TabAreaVisiblePolicy;
+import net.infonode.tabbedpanel.TabDropDownListVisiblePolicy;
+import net.infonode.tabbedpanel.TabLayoutPolicy;
+import net.infonode.tabbedpanel.TabbedPanelProperties;
+import net.infonode.util.Direction;
 import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.aerodynamics.Warning;
 import net.sf.openrocket.aerodynamics.WarningSet;
@@ -34,6 +49,7 @@ import net.sf.openrocket.document.events.SimulationChangeEvent;
 import net.sf.openrocket.gui.adaptors.Column;
 import net.sf.openrocket.gui.adaptors.ColumnTableModel;
 import net.sf.openrocket.gui.components.StyledLabel;
+import net.sf.openrocket.gui.plot.SimulationPlotDialog;
 import net.sf.openrocket.gui.util.Icons;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.logging.LogHelper;
@@ -44,37 +60,61 @@ import net.sf.openrocket.startup.Application;
 import net.sf.openrocket.startup.Preferences;
 import net.sf.openrocket.unit.UnitGroup;
 
-public class SimulationPanel extends JPanel {
+public class SimulationPanel extends JSplitPane {
 	private static final LogHelper log = Application.getLogger();
 	private static final Translator trans = Application.getTranslator();
 
-	
+
 	private static final Color WARNING_COLOR = Color.RED;
 	private static final String WARNING_TEXT = "\uFF01"; // Fullwidth exclamation mark
-	
+
 	private static final Color OK_COLOR = new Color(60, 150, 0);
 	private static final String OK_TEXT = "\u2714"; // Heavy check mark
-	
 
+	private RootWindow bottom;
 
 	private final OpenRocketDocument document;
-	
+
 	private final ColumnTableModel simulationTableModel;
 	private final JTable simulationTable;
-	
-	
-	public SimulationPanel(OpenRocketDocument doc) {
-		super(new MigLayout("fill", "[grow][][][][][][grow]"));
-		
+
+
+	public SimulationPanel(BasicFrame parent, OpenRocketDocument doc) {
+		super(JSplitPane.VERTICAL_SPLIT, true);
+		JPanel top = new JPanel(new MigLayout("fill", "[grow][][][][][][grow]"));
+		setTopComponent(top);
+		bottom = DockingUtil.createRootWindow(new ViewMap(), true);
+		bottom.getWindowBar(Direction.DOWN).setEnabled(true);
+
+		DockingWindowsTheme theme = new ShapedGradientDockingTheme();
+		bottom.getRootWindowProperties().addSuperObject(theme.getRootWindowProperties());
+		RootWindowProperties titleBarStyleProps = PropertiesUtil.createTitleBarStyleRootWindowProperties();
+		bottom.getRootWindowProperties().addSuperObject(titleBarStyleProps);
+
+		{
+			TabWindow tabs = ((TabWindow)bottom.getWindow());
+			tabs.setVisible(false);
+			TabbedPanelProperties props = tabs.getTabWindowProperties().getTabbedPanelProperties();
+			props.setTabLayoutPolicy(TabLayoutPolicy.SCROLLING);
+			props.setTabDropDownListVisiblePolicy(TabDropDownListVisiblePolicy.TABS_NOT_VISIBLE);
+			tabs.getTabWindowProperties().getCloseButtonProperties().setVisible(false);
+			tabs.getTabWindowProperties().getMinimizeButtonProperties().setVisible(false);
+			tabs.getTabWindowProperties().getMaximizeButtonProperties().setVisible(false);
+			tabs.getTabWindowProperties().getDockButtonProperties().setVisible(false);
+			tabs.getTabWindowProperties().getUndockButtonProperties().setVisible(false);
+			props.getTabAreaProperties().setTabAreaVisiblePolicy(TabAreaVisiblePolicy.ALWAYS);
+		}
+		setBottomComponent(bottom);
+
+		setDividerLocation(0.7);
+		this.validate();
+
 		JButton button;
-		
 
 		this.document = doc;
-		
-
 
 		////////  The simulation action buttons
-		
+
 		//// New simulation button
 		button = new JButton(trans.get("simpanel.but.newsimulation"));
 		//// Add a new simulation
@@ -84,18 +124,18 @@ public class SimulationPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				Simulation sim = new Simulation(document.getRocket());
 				sim.setName(document.getNextSimulationName());
-				
+
 				int n = document.getSimulationCount();
 				document.addSimulation(sim);
 				simulationTableModel.fireTableDataChanged();
 				simulationTable.clearSelection();
 				simulationTable.addRowSelectionInterval(n, n);
-				
+
 				openDialog(sim, SimulationEditDialog.EDIT);
 			}
 		});
-		this.add(button, "skip 1, gapright para");
-		
+		top.add(button, "skip 1, gapright para");
+
 		//// Edit simulation button
 		button = new JButton(trans.get("simpanel.but.editsimulation"));
 		//// Edit the selected simulation
@@ -106,16 +146,16 @@ public class SimulationPanel extends JPanel {
 				int selected = simulationTable.getSelectedRow();
 				if (selected < 0)
 					return; // TODO: MEDIUM: "None selected" dialog
-					
+
 				selected = simulationTable.convertRowIndexToModel(selected);
 				simulationTable.clearSelection();
 				simulationTable.addRowSelectionInterval(selected, selected);
-				
+
 				openDialog(document.getSimulations().get(selected), SimulationEditDialog.EDIT);
 			}
 		});
-		this.add(button, "gapright para");
-		
+		top.add(button, "gapright para");
+
 		//// Run simulations
 		button = new JButton(trans.get("simpanel.but.runsimulations"));
 		//// Re-run the selected simulations
@@ -126,22 +166,22 @@ public class SimulationPanel extends JPanel {
 				int[] selection = simulationTable.getSelectedRows();
 				if (selection.length == 0)
 					return; // TODO: LOW: "None selected" dialog
-					
+
 				Simulation[] sims = new Simulation[selection.length];
 				for (int i = 0; i < selection.length; i++) {
 					selection[i] = simulationTable.convertRowIndexToModel(selection[i]);
 					sims[i] = document.getSimulation(selection[i]);
 				}
-				
+
 				long t = System.currentTimeMillis();
 				new SimulationRunDialog(SwingUtilities.getWindowAncestor(
-							SimulationPanel.this), document, sims).setVisible(true);
+						SimulationPanel.this), document, sims).setVisible(true);
 				log.info("Running simulations took " + (System.currentTimeMillis() - t) + " ms");
 				fireMaintainSelection();
 			}
 		});
-		this.add(button, "gapright para");
-		
+		top.add(button, "gapright para");
+
 		//// Delete simulations button
 		button = new JButton(trans.get("simpanel.but.deletesimulations"));
 		//// Delete the selected simulations
@@ -152,38 +192,38 @@ public class SimulationPanel extends JPanel {
 				int[] selection = simulationTable.getSelectedRows();
 				if (selection.length == 0)
 					return; // TODO: LOW: "None selected" dialog
-					
+
 				// Verify deletion
 				boolean verify = Application.getPreferences().getBoolean(Preferences.CONFIRM_DELETE_SIMULATION, true);
 				if (verify) {
-					
+
 					JPanel panel = new JPanel(new MigLayout());
 					//// Do not ask me again
 					JCheckBox dontAsk = new JCheckBox(trans.get("simpanel.checkbox.donotask"));
 					panel.add(dontAsk, "wrap");
 					//// You can change the default operation in the preferences.
 					panel.add(new StyledLabel(trans.get("simpanel.lbl.defpref"), -2));
-					
+
 					int ret = JOptionPane.showConfirmDialog(SimulationPanel.this,
-								new Object[] {
-										//// Delete the selected simulations?
-										trans.get("simpanel.dlg.lbl.DeleteSim1"),
-										//// <html><i>This operation cannot be undone.</i>
-										trans.get("simpanel.dlg.lbl.DeleteSim2"),
-										"",
-										panel },
-								//// Delete simulations
-										trans.get("simpanel.dlg.lbl.DeleteSim3"),
-								JOptionPane.OK_CANCEL_OPTION,
-								JOptionPane.WARNING_MESSAGE);
+							new Object[] {
+							//// Delete the selected simulations?
+							trans.get("simpanel.dlg.lbl.DeleteSim1"),
+							//// <html><i>This operation cannot be undone.</i>
+							trans.get("simpanel.dlg.lbl.DeleteSim2"),
+							"",
+							panel },
+							//// Delete simulations
+							trans.get("simpanel.dlg.lbl.DeleteSim3"),
+							JOptionPane.OK_CANCEL_OPTION,
+							JOptionPane.WARNING_MESSAGE);
 					if (ret != JOptionPane.OK_OPTION)
 						return;
-					
+
 					if (dontAsk.isSelected()) {
 						Application.getPreferences().putBoolean(Preferences.CONFIRM_DELETE_SIMULATION, false);
 					}
 				}
-				
+
 				// Delete simulations
 				for (int i = 0; i < selection.length; i++) {
 					selection[i] = simulationTable.convertRowIndexToModel(selection[i]);
@@ -195,8 +235,8 @@ public class SimulationPanel extends JPanel {
 				simulationTableModel.fireTableDataChanged();
 			}
 		});
-		this.add(button, "gapright para");
-		
+		top.add(button, "gapright para");
+
 		//// Plot / export button
 		button = new JButton(trans.get("simpanel.but.plotexport"));
 		//		button = new JButton("Plot flight");
@@ -206,52 +246,52 @@ public class SimulationPanel extends JPanel {
 				int selected = simulationTable.getSelectedRow();
 				if (selected < 0)
 					return; // TODO: MEDIUM: "None selected" dialog
-					
+
 				selected = simulationTable.convertRowIndexToModel(selected);
 				simulationTable.clearSelection();
 				simulationTable.addRowSelectionInterval(selected, selected);
-				
+
 				openDialog(document.getSimulations().get(selected), SimulationEditDialog.PLOT);
 			}
 		});
-		this.add(button, "wrap para");
-		
+		top.add(button, "wrap para");
+
 
 
 
 		////////  The simulation table
-		
+
 		simulationTableModel = new ColumnTableModel(
 
-		////  Status and warning column
+				////  Status and warning column
 				new Column("") {
 					private JLabel label = null;
-					
+
 					@Override
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						// Initialize the label
 						if (label == null) {
 							label = new StyledLabel(2f);
 							label.setIconTextGap(1);
 							//							label.setFont(label.getFont().deriveFont(Font.BOLD));
 						}
-						
+
 						// Set simulation status icon
 						Simulation.Status status = document.getSimulation(row).getStatus();
 						label.setIcon(Icons.SIMULATION_STATUS_ICON_MAP.get(status));
-						
+
 
 						// Set warning marker
 						if (status == Simulation.Status.NOT_SIMULATED ||
 								status == Simulation.Status.EXTERNAL) {
-							
+
 							label.setText("");
-							
+
 						} else {
-							
+
 							WarningSet w = document.getSimulation(row).getSimulatedWarnings();
 							if (w == null) {
 								label.setText("");
@@ -263,15 +303,15 @@ public class SimulationPanel extends JPanel {
 								label.setText(WARNING_TEXT);
 							}
 						}
-						
+
 						return label;
 					}
-					
+
 					@Override
 					public int getExactWidth() {
 						return 36;
 					}
-					
+
 					@Override
 					public Class<?> getColumnClass() {
 						return JLabel.class;
@@ -287,7 +327,7 @@ public class SimulationPanel extends JPanel {
 							return null;
 						return document.getSimulation(row).getName();
 					}
-					
+
 					@Override
 					public int getDefaultWidth() {
 						return 125;
@@ -304,7 +344,7 @@ public class SimulationPanel extends JPanel {
 						return document.getSimulation(row).getConfiguration()
 								.getMotorConfigurationDescription();
 					}
-					
+
 					@Override
 					public int getDefaultWidth() {
 						return 125;
@@ -317,11 +357,11 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_VELOCITY.getDefaultUnit().toStringUnit(
 								data.getLaunchRodVelocity());
 					}
@@ -333,11 +373,11 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_DISTANCE.getDefaultUnit().toStringUnit(
 								data.getMaxAltitude());
 					}
@@ -349,11 +389,11 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_VELOCITY.getDefaultUnit().toStringUnit(
 								data.getDeploymentVelocity());
 					}
@@ -365,11 +405,11 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_VELOCITY.getDefaultUnit().toStringUnit(
 								data.getMaxVelocity());
 					}
@@ -381,11 +421,11 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_ACCELERATION.getDefaultUnit().toStringUnit(
 								data.getMaxAcceleration());
 					}
@@ -397,11 +437,11 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_FLIGHT_TIME.getDefaultUnit().toStringUnit(
 								data.getTimeToApogee());
 					}
@@ -413,11 +453,11 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_FLIGHT_TIME.getDefaultUnit().toStringUnit(
 								data.getFlightTime());
 					}
@@ -429,23 +469,23 @@ public class SimulationPanel extends JPanel {
 					public Object getValueAt(int row) {
 						if (row < 0 || row >= document.getSimulationCount())
 							return null;
-						
+
 						FlightData data = document.getSimulation(row).getSimulatedData();
 						if (data == null)
 							return null;
-						
+
 						return UnitGroup.UNITS_VELOCITY.getDefaultUnit().toStringUnit(
 								data.getGroundHitVelocity());
 					}
 				}
 
-		) {
+				) {
 			@Override
 			public int getRowCount() {
 				return document.getSimulationCount();
 			}
 		};
-		
+
 		// Override processKeyBinding so that the JTable does not catch
 		// key bindings used in menu accelerators
 		simulationTable = new JTable(simulationTableModel) {
@@ -460,7 +500,7 @@ public class SimulationPanel extends JPanel {
 		simulationTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		simulationTable.setDefaultRenderer(Object.class, new JLabelRenderer());
 		simulationTableModel.setColumnWidths(simulationTable.getColumnModel());
-		
+
 
 		// Mouse listener to act on double-clicks
 		simulationTable.addMouseListener(new MouseAdapter() {
@@ -470,17 +510,17 @@ public class SimulationPanel extends JPanel {
 					int selected = simulationTable.getSelectedRow();
 					if (selected < 0)
 						return;
-					
+
 					selected = simulationTable.convertRowIndexToModel(selected);
 					simulationTable.clearSelection();
 					simulationTable.addRowSelectionInterval(selected, selected);
-					
+
 					openDialog(document.getSimulations().get(selected),
 							SimulationEditDialog.DEFAULT);
 				}
 			}
 		});
-		
+
 		document.addDocumentChangeListener(new DocumentChangeListener() {
 			@Override
 			public void documentChanged(DocumentChangeEvent event) {
@@ -489,7 +529,7 @@ public class SimulationPanel extends JPanel {
 				simulationTableModel.fireTableDataChanged();
 			}
 		});
-		
+
 
 
 
@@ -500,25 +540,38 @@ public class SimulationPanel extends JPanel {
 				fireMaintainSelection();
 			}
 		});
-		
+
 
 		JScrollPane scrollpane = new JScrollPane(simulationTable);
-		this.add(scrollpane, "spanx, grow, wrap rel");
-		
+		top.add(scrollpane, "spanx, grow, wrap rel");
+
 
 	}
-	
-	
+
+
 	public ListSelectionModel getSimulationListSelectionModel() {
 		return simulationTable.getSelectionModel();
 	}
-	
+
+	public void addPlot( final SimulationPlotDialog component ) {
+		SwingUtilities.invokeLater( new Runnable() {
+
+			@Override
+			public void run() {
+				View v = new View(component.getTitle(), null, component);
+				((TabWindow)bottom.getWindow()).addTab(v,0);
+				v.makeVisible();
+				v.maximize();
+			}
+
+		});
+	}
+
 	private void openDialog(final Simulation sim, int position) {
-		new SimulationEditDialog(SwingUtilities.getWindowAncestor(this), document, sim, position)
-				.setVisible(true);
+		new SimulationEditDialog(this, document, sim, position).setVisible(true);
 		fireMaintainSelection();
 	}
-	
+
 	private void fireMaintainSelection() {
 		int[] selection = simulationTable.getSelectedRows();
 		simulationTableModel.fireTableDataChanged();
@@ -528,19 +581,19 @@ public class SimulationPanel extends JPanel {
 			simulationTable.addRowSelectionInterval(row, row);
 		}
 	}
-	
-	
+
+
 	private class JLabelRenderer extends DefaultTableCellRenderer {
-		
+
 		@Override
 		public Component getTableCellRendererComponent(JTable table,
 				Object value, boolean isSelected, boolean hasFocus, int row,
 				int column) {
-			
+
 			if (row < 0 || row >= document.getSimulationCount())
 				return super.getTableCellRendererComponent(table, value,
 						isSelected, hasFocus, row, column);
-			
+
 			// A JLabel is self-contained and has set its own tool tip
 			if (value instanceof JLabel) {
 				JLabel label = (JLabel) value;
@@ -549,66 +602,66 @@ public class SimulationPanel extends JPanel {
 				else
 					label.setBackground(table.getBackground());
 				label.setOpaque(true);
-				
+
 				label.setToolTipText(getSimulationToolTip(document.getSimulation(row)));
 				return label;
 			}
-			
+
 			Component component = super.getTableCellRendererComponent(table, value,
 					isSelected, hasFocus, row, column);
-			
+
 			if (component instanceof JComponent) {
 				((JComponent) component).setToolTipText(getSimulationToolTip(
 						document.getSimulation(row)));
 			}
 			return component;
 		}
-		
+
 		private String getSimulationToolTip(Simulation sim) {
 			String tip;
 			FlightData data = sim.getSimulatedData();
-			
+
 			tip = "<html><b>" + sim.getName() + "</b><br>";
 			switch (sim.getStatus()) {
 			case UPTODATE:
 				tip += trans.get ("simpanel.ttip.uptodate") + "<br>";
 				break;
-			
+
 			case LOADED:
 				tip += trans.get ("simpanel.ttip.loaded") + "<br>";
 				break;
-			
+
 			case OUTDATED:
 				tip += trans.get ("simpanel.ttip.outdated") + "<br>";
 				break;
-			
+
 			case EXTERNAL:
 				tip += trans.get ("simpanel.ttip.external") + "<br>";
 				return tip;
-				
+
 			case NOT_SIMULATED:
 				tip += trans.get ("simpanel.ttip.notSimulated");
 				return tip;
 			}
-			
+
 			if (data == null) {
 				tip += trans.get ("simpanel.ttip.noData");
 				return tip;
 			}
 			WarningSet warnings = data.getWarningSet();
-			
+
 			if (warnings.isEmpty()) {
 				tip += trans.get ("simpanel.ttip.noWarnings");
 				return tip;
 			}
-			
+
 			tip += trans.get ("simpanel.ttip.warnings");
 			for (Warning w : warnings) {
 				tip += "<br>" + w.toString();
 			}
-			
+
 			return tip;
 		}
-		
+
 	}
 }

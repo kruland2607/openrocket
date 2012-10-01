@@ -15,7 +15,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
@@ -24,6 +23,7 @@ import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.gui.components.DescriptionArea;
 import net.sf.openrocket.gui.components.UnitSelector;
+import net.sf.openrocket.gui.main.SimulationPanel;
 import net.sf.openrocket.gui.util.GUIUtil;
 import net.sf.openrocket.gui.util.Icons;
 import net.sf.openrocket.l10n.Translator;
@@ -77,6 +77,7 @@ public class SimulationPlotPanel extends JPanel {
 	private static PlotConfiguration defaultConfiguration =
 			PlotConfiguration.DEFAULT_CONFIGURATIONS[0].resetUnits();
 	
+	private final SimulationPanel parent;
 
 	private final Simulation simulation;
 	private final FlightDataType[] types;
@@ -95,9 +96,9 @@ public class SimulationPlotPanel extends JPanel {
 	private int modifying = 0;
 	
 	
-	public SimulationPlotPanel(final Simulation simulation) {
+	public SimulationPlotPanel(SimulationPanel parent, final Simulation simulation) {
 		super(new MigLayout("fill"));
-		
+		this.parent = parent;
 		this.simulation = simulation;
 		if (simulation.getSimulatedData() == null ||
 				simulation.getSimulatedData().getBranchCount() == 0) {
@@ -307,8 +308,7 @@ public class SimulationPlotPanel extends JPanel {
 					return;
 				}
 				defaultConfiguration = configuration.clone();
-				SimulationPlotDialog.showPlot(SwingUtilities.getWindowAncestor(SimulationPlotPanel.this),
-						simulation, configuration);
+				SimulationPlotDialog.showPlot(SimulationPlotPanel.this.parent, simulation, configuration);
 			}
 		});
 		this.add(button, "right");

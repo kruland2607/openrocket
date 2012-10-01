@@ -7,16 +7,16 @@ import net.sf.openrocket.arch.SystemInfo;
 import net.sf.openrocket.arch.SystemInfo.Platform;
 import net.sf.openrocket.gui.dialogs.AboutDialog;
 import net.sf.openrocket.gui.dialogs.preferences.PreferencesDialog;
-import net.sf.openrocket.gui.main.BasicFrame;
+import net.sf.openrocket.gui.main.DocumentManager;
 import net.sf.openrocket.logging.LogHelper;
 
 import com.apple.eawt.AboutHandler;
-import com.apple.eawt.PreferencesHandler;
-import com.apple.eawt.QuitHandler;
-import com.apple.eawt.QuitResponse;
 import com.apple.eawt.AppEvent.AboutEvent;
 import com.apple.eawt.AppEvent.PreferencesEvent;
 import com.apple.eawt.AppEvent.QuitEvent;
+import com.apple.eawt.PreferencesHandler;
+import com.apple.eawt.QuitHandler;
+import com.apple.eawt.QuitResponse;
 
 /**
  * Static code for initialization of OSX UI Elements: Menu, Icon, Name and
@@ -40,7 +40,7 @@ final class OSXStartup {
 	private static final QuitHandler qh = new QuitHandler() {
 		@Override
 		public void handleQuitRequestWith(final QuitEvent e, final QuitResponse r) {
-			BasicFrame.quitAction();
+			DocumentManager.quitAction();
 			// if we get here the user canceled
 			r.cancelQuit();
 		}

@@ -29,7 +29,7 @@ import javax.swing.table.TableColumnModel;
 import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.gui.dialogs.motor.MotorChooserDialog;
-import net.sf.openrocket.gui.main.BasicFrame;
+import net.sf.openrocket.gui.main.DocumentManager;
 import net.sf.openrocket.gui.util.GUIUtil;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.motor.Motor;
@@ -269,7 +269,7 @@ public class EditMotorConfigurationDialog extends JDialog {
 		GUIUtil.setDisposableDialogOptions(this, close);
 		
 		// Undo description
-		final OpenRocketDocument document = BasicFrame.findDocument(rocket);
+		final OpenRocketDocument document = DocumentManager.findDocument(rocket);
 		if (document != null) {
 			//// Edit motor configurations
 			document.startUndo(trans.get("edtmotorconfdlg.title.Editmotorconf"));

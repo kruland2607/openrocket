@@ -1,12 +1,12 @@
 package net.sf.openrocket.gui;
 
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -231,7 +231,7 @@ public class StorageOptionChooser extends JPanel {
 	 * @param parent	the parent frame for the dialog.
 	 * @return			<code>true</code> to continue, <code>false</code> if the user cancelled.
 	 */
-	public static boolean verifyStorageOptions(OpenRocketDocument document, JFrame parent) {
+	public static boolean verifyStorageOptions(OpenRocketDocument document, Window parent) {
 		StorageOptions options = document.getDefaultStorageOptions();
 		
 		if (options.isExplicitlySet()) {

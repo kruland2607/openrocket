@@ -2,8 +2,6 @@ package net.sf.openrocket.gui.main;
 
 
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -16,10 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JViewport;
-import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
@@ -30,6 +25,7 @@ import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.gui.components.StyledLabel;
 import net.sf.openrocket.gui.configdialog.ComponentConfigDialog;
 import net.sf.openrocket.gui.main.componenttree.ComponentTreeModel;
+import net.sf.openrocket.gui.util.FlowingButtonBox;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.logging.LogHelper;
 import net.sf.openrocket.rocketcomponent.BodyComponent;
@@ -65,42 +61,21 @@ import net.sf.openrocket.util.Reflection;
  * @author Sampo Niskanen <sampo.niskanen@iki.fi>
  */
 
-public class ComponentAddButtons extends JPanel implements Scrollable {
+public class ComponentAddButtons extends FlowingButtonBox {
 	private static final LogHelper log = Application.getLogger();
 	private static final Translator trans = Application.getTranslator();
 	
-	private static final int ROWS = 3;
-	private static final int MAXCOLS = 6;
-	private static final String BUTTONPARAM = "grow, sizegroup buttons";
-	
-	private static final int GAP = 5;
-	private static final int EXTRASPACE = 0;
-	
-	private final ComponentButton[][] buttons;
-	
 	private final OpenRocketDocument document;
 	private final TreeSelectionModel selectionModel;
-	private final JViewport viewport;
-	private final MigLayout layout;
-	
-	private final int width, height;
 	
 	
 	public ComponentAddButtons(OpenRocketDocument document, TreeSelectionModel model,
 			JViewport viewport) {
 		
-		super();
-		String constaint = "[min!]";
-		for (int i = 1; i < MAXCOLS; i++)
-			constaint = constaint + GAP + "[min!]";
-		
-		layout = new MigLayout("fill", constaint);
-		setLayout(layout);
+		super(3, 6, 5, 0, viewport);
 		this.document = document;
 		this.selectionModel = model;
-		this.viewport = viewport;
 		
-		buttons = new ComponentButton[ROWS][];
 		int row = 0;
 		
 		////////////////////////////////////////////
@@ -157,106 +132,7 @@ public class ComponentAddButtons extends JPanel implements Scrollable {
 				//// Mass\ncomponent
 				new ComponentButton(MassComponent.class, trans.get("compaddbuttons.Masscomponent")));
 		
-
-		// Get maximum button size
-		int w = 0, h = 0;
-		
-		for (row = 0; row < buttons.length; row++) {
-			for (int col = 0; col < buttons[row].length; col++) {
-				Dimension d = buttons[row][col].getPreferredSize();
-				if (d.width > w)
-					w = d.width;
-				if (d.height > h)
-					h = d.height;
-			}
-		}
-		
-		// Set all buttons to maximum size
-		width = w;
-		height = h;
-		Dimension d = new Dimension(width, height);
-		for (row = 0; row < buttons.length; row++) {
-			for (int col = 0; col < buttons[row].length; col++) {
-				buttons[row][col].setMinimumSize(d);
-				buttons[row][col].setPreferredSize(d);
-				buttons[row][col].getComponent(0).validate();
-			}
-		}
-		
-		// Add viewport listener if viewport provided
-		if (viewport != null) {
-			viewport.addChangeListener(new ChangeListener() {
-				private int oldWidth = -1;
-				
-				public void stateChanged(ChangeEvent e) {
-					Dimension d = ComponentAddButtons.this.viewport.getExtentSize();
-					if (d.width != oldWidth) {
-						oldWidth = d.width;
-						flowButtons();
-					}
-				}
-			});
-		}
-		
-		add(new JPanel(), "grow");
-	}
-	
-	
-	/**
-	 * Adds a row of buttons to the panel.
-	 * @param label  Label placed before the row
-	 * @param row    Row number
-	 * @param b      List of ComponentButtons to place on the row
-	 */
-	private void addButtonRow(String label, int row, ComponentButton... b) {
-		if (row > 0)
-			add(new JLabel(label), "span, gaptop unrel, wrap");
-		else
-			add(new JLabel(label), "span, gaptop 0, wrap");
-		
-		int col = 0;
-		buttons[row] = new ComponentButton[b.length];
-		
-		for (int i = 0; i < b.length; i++) {
-			buttons[row][col] = b[i];
-			if (i < b.length - 1)
-				add(b[i], BUTTONPARAM);
-			else
-				add(b[i], BUTTONPARAM + ", wrap");
-			col++;
-		}
-	}
-	
-	
-	/**
-	 * Flows the buttons in all rows of the panel.  If a button would come too close
-	 * to the right edge of the viewport, "newline" is added to its constraints flowing 
-	 * it to the next line.
-	 */
-	private void flowButtons() {
-		if (viewport == null)
-			return;
-		
-		int w;
-		
-		Dimension d = viewport.getExtentSize();
-		
-		for (int row = 0; row < buttons.length; row++) {
-			w = 0;
-			for (int col = 0; col < buttons[row].length; col++) {
-				w += GAP + width;
-				String param = BUTTONPARAM + ",width " + width + "!,height " + height + "!";
-				
-				if (w + EXTRASPACE > d.width) {
-					param = param + ",newline";
-					w = GAP + width;
-				}
-				if (col == buttons[row].length - 1)
-					param = param + ",wrap";
-				layout.setComponentConstraints(buttons[row][col], param);
-			}
-		}
-		revalidate();
+		super.postConstruct();
 	}
 	
 	
@@ -613,39 +489,4 @@ public class ComponentAddButtons extends JPanel implements Scrollable {
 	
 	
 
-	/////////  Scrolling functionality
-	
-	@Override
-	public Dimension getPreferredScrollableViewportSize() {
-		return getPreferredSize();
-	}
-	
-	
-	@Override
-	public int getScrollableBlockIncrement(Rectangle visibleRect,
-			int orientation, int direction) {
-		if (orientation == SwingConstants.VERTICAL)
-			return visibleRect.height * 8 / 10;
-		return 10;
-	}
-	
-	
-	@Override
-	public boolean getScrollableTracksViewportHeight() {
-		return false;
-	}
-	
-	
-	@Override
-	public boolean getScrollableTracksViewportWidth() {
-		return true;
-	}
-	
-	
-	@Override
-	public int getScrollableUnitIncrement(Rectangle visibleRect,
-			int orientation, int direction) {
-		return 10;
-	}
-	
 }

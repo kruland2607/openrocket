@@ -1,6 +1,8 @@
 package net.sf.openrocket.gui.dialogs;
 
+import java.awt.Dialog;
 import java.awt.Font;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -9,7 +11,6 @@ import java.io.InputStreamReader;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -31,8 +32,8 @@ public class LicenseDialog extends JDialog {
 		"OpenRocket is licensed under the GNU GPL version 3, with additional permissions.\n" +
 		"See http://openrocket.sourceforge.net/ for details.";
 
-	public LicenseDialog(JFrame parent) {
-		super(parent, true);
+	public LicenseDialog(Window parent) {
+		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
 		
 		JPanel panel = new JPanel(new MigLayout("fill"));
 		
