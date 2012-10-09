@@ -18,6 +18,8 @@ import net.sf.openrocket.startup.Application;
 public class LoadFromLibraryDialog extends JDialog {
 
 	private static final Translator trans = Application.getTranslator();
+	
+	private LibraryContentsModel libraryContentsModel = new LibraryContentsModel();
 
 	public LoadFromLibraryDialog(Window owner) {
 		super(owner, trans.get("title"), Dialog.ModalityType.APPLICATION_MODAL);
@@ -36,7 +38,7 @@ public class LoadFromLibraryDialog extends JDialog {
 
 		panel.add(sub, "growx, ay 0,wrap para");
 
-		JTable modelSelectionTable = new JTable();
+		JTable modelSelectionTable = new JTable(libraryContentsModel);
 		
 		JScrollPane scrollpane = new JScrollPane();
 		scrollpane.setViewportView(modelSelectionTable);
