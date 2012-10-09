@@ -2,11 +2,19 @@ package net.sf.openrocket.library;
 
 public class LibraryEntry {
 
+	private RemoteHost host;
 	private String name;
 	private String author;
 	private String category;
 	private String downloadURL;
 	private String webURL;
+	
+	public RemoteHost getHost() {
+		return host;
+	}
+	public void setHost(RemoteHost host) {
+		this.host = host;
+	}
 	public String getName() {
 		return name;
 	}

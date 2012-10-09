@@ -1,0 +1,19 @@
+
+<entries>
+    <entry>
+        <author>author1</author>
+        <name>name1</name>
+        <category>category1</category>
+        <downloadurl>downloadurl1</downloadurl>
+        <weburl>weburl1</weburl>
+    </entry>
+    
+    <entry>
+        <author>author2</author>
+        <name>name2</name>
+        <category>category2</category>
+        <downloadurl>downloadurl2</downloadurl>
+        <weburl>weburl2</weburl>
+    </entry>
+    
+</entries>
