@@ -139,7 +139,7 @@ public class UpdateInfoRetriever {
 			String url = Communicator.UPDATE_INFO_URL + "?" + Communicator.VERSION_PARAM + "="
 					+ Communicator.encode(BuildProperties.getVersion());
 			
-			HttpURLConnection connection = Communicator.connectionSource.getConnection(url);
+			HttpURLConnection connection = Communicator.getConnection(url);
 			
 			connection.setConnectTimeout(Communicator.CONNECTION_TIMEOUT);
 			connection.setInstanceFollowRedirects(true);

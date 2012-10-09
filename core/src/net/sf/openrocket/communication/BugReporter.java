@@ -24,7 +24,7 @@ public class BugReporter extends Communicator {
 	 */
 	public static void sendBugReport(String report) throws IOException {
 		
-		HttpURLConnection connection = connectionSource.getConnection(BUG_REPORT_URL);
+		HttpURLConnection connection = getConnection(BUG_REPORT_URL);
 		
 		connection.setConnectTimeout(CONNECTION_TIMEOUT);
 		connection.setInstanceFollowRedirects(true);

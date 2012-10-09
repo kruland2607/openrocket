@@ -1,5 +1,6 @@
 package net.sf.openrocket.communication;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
@@ -41,8 +42,11 @@ public abstract class Communicator {
 	protected static final int MAX_INPUT_BYTES = 20000;
 
 	
-	protected static ConnectionSource connectionSource = new DefaultConnectionSource();
+	private static ConnectionSource connectionSource = new DefaultConnectionSource();
 	
+	public static HttpURLConnection getConnection(String url) throws IOException {
+		return connectionSource.getConnection(url);
+	}
 	
 	/**
 	 * Set the source of the network connections.  This can be used for unit testing.
