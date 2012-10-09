@@ -463,6 +463,7 @@ public class BasicFrame extends JFrame {
 		
 		//// Open from Library...
 		item = new JMenuItem(trans.get("main.menu.file.openLibrary"));
+		item.getAccessibleContext().setAccessibleDescription(trans.get("BasicFrame.item.OpenLibraryTooltip"));
 		item.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e ) {
