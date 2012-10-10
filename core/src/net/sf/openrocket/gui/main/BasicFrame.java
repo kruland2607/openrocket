@@ -1153,7 +1153,7 @@ public class BasicFrame extends JFrame {
 	 * @param parent	the parent component for which a progress dialog is opened.
 	 * @return			whether the file was successfully loaded and opened.
 	 */
-	private static boolean open(InputStream stream, String filename, Window parent) {
+	public static boolean open(InputStream stream, String filename, Window parent) {
 		OpenFileWorker worker = new OpenFileWorker(stream, ROCKET_LOADER);
 		return open(worker, filename, null, parent);
 	}

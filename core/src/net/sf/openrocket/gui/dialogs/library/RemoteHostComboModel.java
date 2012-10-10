@@ -26,16 +26,16 @@ public class RemoteHostComboModel extends DefaultComboBoxModel<String> {
 		super( hosts );
 	}
 	
-	public String getSelectedUrl() {
+	public RemoteHost getSelectedRemoteHost() {
 		String host = (String) super.getSelectedItem();
 		
 		for( RemoteHost h: RemoteHostRegistry.getHosts() ) {
 			if ( h.getDisplayName().equals(host) ) {
-				return h.getUrl();
+				return h;
 			}
 		}
 		
-		return host;
+		return new RemoteHost( host, host);
 	}
 	
 	@Override
