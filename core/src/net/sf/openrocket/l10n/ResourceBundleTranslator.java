@@ -1,5 +1,6 @@
 package net.sf.openrocket.l10n;
 
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -31,7 +32,7 @@ public class ResourceBundleTranslator implements Translator {
 	 */
 	public ResourceBundleTranslator(String baseName, Locale locale) {
 		this.bundle = ResourceBundle.getBundle(baseName, locale);
-		this.english = ResourceBundle.getBundle(baseName, Locale.ROOT);
+		this.english = ResourceBundle.getBundle(baseName, Locale.ENGLISH);
 	}
 	
 	
@@ -56,7 +57,10 @@ public class ResourceBundleTranslator implements Translator {
 	@Override
 	public synchronized String getBaseText(String base, String translation) {
 		String prefix = base + ".";
-		for (String key : bundle.keySet()) {
+		// Have to use getKeys instead of keySet for Froyo compatiblity
+		Enumeration<String> keys = bundle.getKeys();
+		while( keys.hasMoreElements() ) {
+			String key = keys.nextElement();
 			if (key.startsWith(prefix)) {
 				String value = bundle.getString(key);
 				if (value.equals(translation)) {
