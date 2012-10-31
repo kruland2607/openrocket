@@ -34,12 +34,12 @@
 		<link>
 			<name>core</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/OpenRocket/src</locationURI>
+			<locationURI>WORKSPACE_LOC/openrocket/core/src</locationURI>
 		</link>
 		<link>
 			<name>core-resources</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/OpenRocket/resources</locationURI>
+			<locationURI>WORKSPACE_LOC/openrocket/core/resources</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
