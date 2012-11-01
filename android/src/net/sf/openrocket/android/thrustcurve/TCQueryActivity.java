@@ -64,8 +64,6 @@ implements TCQueryAction.OnTCQueryCompleteListener
 		if ( message != null) {
 			ErrorDialogFragment error = ErrorDialogFragment.newInstance(message);
 			error.show(getSupportFragmentManager(), "ErrorDialog");
-		} else {
-			finish();
 		}
 	}
 
