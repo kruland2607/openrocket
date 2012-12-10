@@ -77,6 +77,8 @@ public class PreferencesActivity extends SherlockPreferenceActivity
 		String distance = sharedPreferences.getString(unitDistance, "m");
 		UnitGroup.UNITS_DISTANCE.setDefaultUnit( distance );
 		
+		UnitGroup.UNITS_STABILITY.setDefaultUnit("cal");
+
 	}
 
 	private class UnitPreferenceListener implements Preference.OnPreferenceChangeListener {
