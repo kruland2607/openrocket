@@ -28,12 +28,15 @@ public class Application extends android.app.Application {
 
 			net.sf.openrocket.startup.Application.setPreferences( new PreferencesAdapter() );
 
-			net.sf.openrocket.startup.Application.setComponentPresetDao( new ComponentPresetDatabase(){
+			ComponentPresetDatabase componentDB = new ComponentPresetDatabase() {
 				@Override
 				protected void load() {
 					// We don't need components
 				} 
-			} );
+			};
+			componentDB.startLoading();
+			
+			net.sf.openrocket.startup.Application.setComponentPresetDao( componentDB );
 
 			MotorDatabaseAdapter db = new MotorDatabaseAdapter(this);
 
