@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -343,8 +344,8 @@ public class RocketComponentConfig extends JPanel {
 		//// <html>The overridden mass does not include motors.<br>
 		panel.add(new StyledLabel(trans.get("RocketCompCfg.lbl.longB1") +
 				//// The center of gravity is measured from the front end of the
-				trans.get("RocketCompCfg.lbl.longB2") + " " +
-				component.getComponentName().toLowerCase(Locale.getDefault()) + ".", -1),
+				MessageFormat.format(trans.get("RocketCompCfg.lbl.longB2"),
+						component.getComponentName().toLowerCase(Locale.getDefault())), -1),
 				"spanx, wrap, gap para, height 0::30lp");
 		
 		return panel;

@@ -91,6 +91,7 @@ import net.sf.openrocket.gui.util.Icons;
 import net.sf.openrocket.gui.util.OpenFileWorker;
 import net.sf.openrocket.gui.util.SaveFileWorker;
 import net.sf.openrocket.gui.util.SwingPreferences;
+import net.sf.openrocket.l10n.L10N;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.logging.LogHelper;
 import net.sf.openrocket.rocketcomponent.ComponentChangeEvent;
@@ -1398,9 +1399,7 @@ public class BasicFrame extends JFrame {
 			log.info("Confirming whether to save the design");
 			ComponentConfigDialog.hideDialog();
 			int result = JOptionPane.showConfirmDialog(this,
-					trans.get("BasicFrame.dlg.lbl1") + rocket.getName() +
-							trans.get("BasicFrame.dlg.lbl2") + "  " +
-							trans.get("BasicFrame.dlg.lbl3"),
+					L10N.replace(trans.get("BasicFrame.dlg.lbl"), "{rocket}", rocket.getName()),
 					trans.get("BasicFrame.dlg.title"), JOptionPane.YES_NO_CANCEL_OPTION,
 					JOptionPane.QUESTION_MESSAGE);
 			if (result == JOptionPane.YES_OPTION) {

@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,7 +47,6 @@ import net.sf.openrocket.gui.dialogs.flightconfiguration.FlightConfigurationDial
 import net.sf.openrocket.gui.plot.Axis;
 import net.sf.openrocket.gui.plot.PlotConfiguration;
 import net.sf.openrocket.gui.plot.SimulationPlotPanel;
-import net.sf.openrocket.gui.scalefigure.RocketPanel;
 import net.sf.openrocket.gui.util.GUIUtil;
 import net.sf.openrocket.gui.util.Icons;
 import net.sf.openrocket.l10n.Translator;
@@ -83,7 +83,7 @@ public class SimulationEditDialog extends JDialog {
 	public static final int EDIT = 1;
 	public static final int PLOT = 2;
 	
-
+	
 	private final Window parentWindow;
 	private final Simulation simulation;
 	private final OpenRocketDocument document;
@@ -163,7 +163,7 @@ public class SimulationEditDialog extends JDialog {
 		
 		mainPanel.add(tabbedPane, "spanx, grow, wrap");
 		
-
+		
 		// Buttons
 		mainPanel.add(new JPanel(), "spanx, split, growx");
 		
@@ -189,7 +189,7 @@ public class SimulationEditDialog extends JDialog {
 		});
 		mainPanel.add(close, "");
 		
-
+		
 		this.add(mainPanel);
 		this.validate();
 		this.pack();
@@ -199,9 +199,9 @@ public class SimulationEditDialog extends JDialog {
 	}
 	
 	
-
-
-
+	
+	
+	
 	private JPanel flightConditionsTab() {
 		JPanel panel = new JPanel(new MigLayout("fill"));
 		JPanel sub;
@@ -234,12 +234,12 @@ public class SimulationEditDialog extends JDialog {
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JDialog configDialog = new FlightConfigurationDialog(document.getRocket(),SwingUtilities.windowForComponent(SimulationEditDialog.this));
+				JDialog configDialog = new FlightConfigurationDialog(document.getRocket(), SwingUtilities.windowForComponent(SimulationEditDialog.this));
 				configDialog.show();
 			}
 		});
 		panel.add(button, "wrap");
-
+		
 		//// Wind settings:  Average wind speed, turbulence intensity, std. deviation
 		sub = new JPanel(new MigLayout("fill, gap rel unrel",
 				"[grow][65lp!][30lp!][75lp!]", ""));
@@ -247,7 +247,7 @@ public class SimulationEditDialog extends JDialog {
 		sub.setBorder(BorderFactory.createTitledBorder(trans.get("simedtdlg.lbl.Wind")));
 		panel.add(sub, "growx, split 2, aligny 0, flowy, gapright para");
 		
-
+		
 		// Wind average
 		//// Average windspeed:
 		label = new JLabel(trans.get("simedtdlg.lbl.Averwindspeed"));
@@ -270,8 +270,8 @@ public class SimulationEditDialog extends JDialog {
 		slider.setToolTipText(tip);
 		sub.add(slider, "w 75lp, wrap");
 		
-
-
+		
+		
 		// Wind std. deviation
 		//// Standard deviation:
 		label = new JLabel(trans.get("simedtdlg.lbl.Stddeviation"));
@@ -297,18 +297,16 @@ public class SimulationEditDialog extends JDialog {
 		slider.setToolTipText(tip);
 		sub.add(slider, "w 75lp, wrap");
 		
-
+		
 		// Wind turbulence intensity
 		//// Turbulence intensity:
 		label = new JLabel(trans.get("simedtdlg.lbl.Turbulenceintensity"));
 		//// <html>The turbulence intensity is the standard deviation divided by the average windspeed.<br>
 		//// Typical values range from 
 		//// to
-		tip = trans.get("simedtdlg.lbl.ttip.Turbulenceintensity1") +
-				trans.get("simedtdlg.lbl.ttip.Turbulenceintensity2") + " " +
-				UnitGroup.UNITS_RELATIVE.getDefaultUnit().toStringUnit(0.05) +
-				" " + trans.get("simedtdlg.lbl.ttip.Turbulenceintensity3") + " " +
-				UnitGroup.UNITS_RELATIVE.getDefaultUnit().toStringUnit(0.20) + ".";
+		tip = MessageFormat.format(trans.get("simedtdlg.lbl.ttip.Turbulenceintensity"),
+				UnitGroup.UNITS_RELATIVE.getDefaultUnit().toStringUnit(0.05),
+				UnitGroup.UNITS_RELATIVE.getDefaultUnit().toStringUnit(0.20));
 		label.setToolTipText(tip);
 		sub.add(label);
 		
@@ -335,10 +333,10 @@ public class SimulationEditDialog extends JDialog {
 			}
 		});
 		
-
-
-
-
+		
+		
+		
+		
 		//// Temperature and pressure
 		sub = new JPanel(new MigLayout("fill, gap rel unrel",
 				"[grow][65lp!][30lp!][75lp!]", ""));
@@ -346,7 +344,7 @@ public class SimulationEditDialog extends JDialog {
 		sub.setBorder(BorderFactory.createTitledBorder(trans.get("simedtdlg.border.Atmoscond")));
 		panel.add(sub, "growx, aligny 0, gapright para");
 		
-
+		
 		BooleanModel isa = new BooleanModel(conditions, "ISAAtmosphere");
 		JCheckBox check = new JCheckBox(isa);
 		//// Use International Standard Atmosphere
@@ -355,11 +353,9 @@ public class SimulationEditDialog extends JDialog {
 		//// <br>This model has a temperature of
 		//// and a pressure of
 		//// at sea level.
-		check.setToolTipText(trans.get("simedtdlg.checkbox.ttip.InterStdAtmosphere1") + " " +
-				UnitGroup.UNITS_TEMPERATURE.toStringUnit(ExtendedISAModel.STANDARD_TEMPERATURE) +
-				" " + trans.get("simedtdlg.checkbox.ttip.InterStdAtmosphere2") + " " +
-				UnitGroup.UNITS_PRESSURE.toStringUnit(ExtendedISAModel.STANDARD_PRESSURE) +
-				" " + trans.get("simedtdlg.checkbox.ttip.InterStdAtmosphere3"));
+		check.setToolTipText(MessageFormat.format(trans.get("simedtdlg.checkbox.ttip.InterStdAtmosphere"),
+				UnitGroup.UNITS_TEMPERATURE.toStringUnit(ExtendedISAModel.STANDARD_TEMPERATURE),
+				UnitGroup.UNITS_PRESSURE.toStringUnit(ExtendedISAModel.STANDARD_PRESSURE)));
 		sub.add(check, "spanx, wrap unrel");
 		
 		// Temperature:
@@ -387,8 +383,8 @@ public class SimulationEditDialog extends JDialog {
 		isa.addEnableComponent(slider, false);
 		sub.add(slider, "w 75lp, wrap");
 		
-
-
+		
+		
 		// Pressure:
 		label = new JLabel(trans.get("simedtdlg.lbl.Pressure"));
 		//// The atmospheric pressure at the launch site.
@@ -414,10 +410,10 @@ public class SimulationEditDialog extends JDialog {
 		isa.addEnableComponent(slider, false);
 		sub.add(slider, "w 75lp, wrap");
 		
-
-
-
-
+		
+		
+		
+		
 		//// Launch site conditions
 		sub = new JPanel(new MigLayout("fill, gap rel unrel",
 				"[grow][65lp!][30lp!][75lp!]", ""));
@@ -425,7 +421,7 @@ public class SimulationEditDialog extends JDialog {
 		sub.setBorder(BorderFactory.createTitledBorder(trans.get("simedtdlg.lbl.Launchsite")));
 		panel.add(sub, "growx, split 2, aligny 0, flowy");
 		
-
+		
 		// Latitude:
 		label = new JLabel(trans.get("simedtdlg.lbl.Latitude"));
 		//// <html>The launch site latitude affects the gravitational pull of Earth.<br>
@@ -448,7 +444,7 @@ public class SimulationEditDialog extends JDialog {
 		slider.setToolTipText(tip);
 		sub.add(slider, "w 75lp, wrap");
 		
-
+		
 		// Longitude:
 		label = new JLabel(trans.get("simedtdlg.lbl.Longitude"));
 		tip = trans.get("simedtdlg.lbl.ttip.Longitude");
@@ -469,7 +465,7 @@ public class SimulationEditDialog extends JDialog {
 		slider.setToolTipText(tip);
 		sub.add(slider, "w 75lp, wrap");
 		
-
+		
 		// Altitude:
 		label = new JLabel(trans.get("simedtdlg.lbl.Altitude"));
 		//// <html>The launch altitude above mean sea level.<br> 
@@ -492,10 +488,10 @@ public class SimulationEditDialog extends JDialog {
 		slider.setToolTipText(tip);
 		sub.add(slider, "w 75lp, wrap");
 		
-
-
-
-
+		
+		
+		
+		
 		//// Launch rod
 		sub = new JPanel(new MigLayout("fill, gap rel unrel",
 				"[grow][65lp!][30lp!][75lp!]", ""));
@@ -503,7 +499,7 @@ public class SimulationEditDialog extends JDialog {
 		sub.setBorder(BorderFactory.createTitledBorder(trans.get("simedtdlg.border.Launchrod")));
 		panel.add(sub, "growx, aligny 0, wrap");
 		
-
+		
 		// Length:
 		label = new JLabel(trans.get("simedtdlg.lbl.Length"));
 		//// The length of the launch rod.
@@ -525,8 +521,8 @@ public class SimulationEditDialog extends JDialog {
 		slider.setToolTipText(tip);
 		sub.add(slider, "w 75lp, wrap");
 		
-
-
+		
+		
 		// Angle:
 		label = new JLabel(trans.get("simedtdlg.lbl.Angle"));
 		//// The angle of the launch rod from vertical.
@@ -550,18 +546,16 @@ public class SimulationEditDialog extends JDialog {
 		slider.setToolTipText(tip);
 		sub.add(slider, "w 75lp, wrap");
 		
-
-
+		
+		
 		// Direction:
 		label = new JLabel(trans.get("simedtdlg.lbl.Direction"));
 		//// <html>Direction of the launch rod relative to the wind.<br>
 		////  = towards the wind, 
 		////  = downwind.
-		tip = trans.get("simedtdlg.lbl.ttip.Direction1") +
-				UnitGroup.UNITS_ANGLE.toStringUnit(0) +
-				" " + trans.get("simedtdlg.lbl.ttip.Direction2") + " " +
-				UnitGroup.UNITS_ANGLE.toStringUnit(Math.PI) +
-				" " + trans.get("simedtdlg.lbl.ttip.Direction3");
+		tip = MessageFormat.format(trans.get("simedtdlg.lbl.ttip.Direction"),
+				UnitGroup.UNITS_ANGLE.toStringUnit(0),
+				UnitGroup.UNITS_ANGLE.toStringUnit(Math.PI));
 		label.setToolTipText(tip);
 		sub.add(label);
 		
@@ -582,7 +576,6 @@ public class SimulationEditDialog extends JDialog {
 		
 		return panel;
 	}
-	
 	
 	private String getIntensityDescription(double i) {
 		if (i < 0.001)
@@ -608,7 +601,7 @@ public class SimulationEditDialog extends JDialog {
 	}
 	
 	
-
+	
 	private JPanel simulationOptionsTab() {
 		JPanel panel = new JPanel(new MigLayout("fill"));
 		JPanel sub, subsub;
@@ -619,7 +612,7 @@ public class SimulationEditDialog extends JDialog {
 		UnitSelector unit;
 		BasicSlider slider;
 		
-
+		
 		//// Simulation options
 		sub = new JPanel(new MigLayout("fill, gap rel unrel",
 				"[grow][65lp!][30lp!][75lp!]", ""));
@@ -627,11 +620,11 @@ public class SimulationEditDialog extends JDialog {
 		sub.setBorder(BorderFactory.createTitledBorder(trans.get("simedtdlg.border.Simopt")));
 		panel.add(sub, "growx, growy, aligny 0");
 		
-
+		
 		// Separate panel for computation methods, as they use a different layout
 		subsub = new JPanel(new MigLayout("insets 0, fill"));
 		
-
+		
 		//// Calculation method:
 		tip = trans.get("simedtdlg.lbl.ttip.Calcmethod");
 		label = new JLabel(trans.get("simedtdlg.lbl.Calcmethod"));
@@ -643,10 +636,9 @@ public class SimulationEditDialog extends JDialog {
 		label.setToolTipText(tip);
 		subsub.add(label, "growx, wrap para");
 		
-
+		
 		//  Simulation method
-		tip = trans.get("simedtdlg.lbl.ttip.Simmethod1") +
-				trans.get("simedtdlg.lbl.ttip.Simmethod2");
+		tip = trans.get("simedtdlg.lbl.ttip.Simmethod");
 		label = new JLabel(trans.get("simedtdlg.lbl.Simmethod"));
 		label.setToolTipText(tip);
 		subsub.add(label, "gapright para");
@@ -655,7 +647,7 @@ public class SimulationEditDialog extends JDialog {
 		label.setToolTipText(tip);
 		subsub.add(label, "growx, wrap para");
 		
-
+		
 		//// Geodetic calculation method:
 		label = new JLabel(trans.get("simedtdlg.lbl.GeodeticMethod"));
 		label.setToolTipText(trans.get("simedtdlg.lbl.ttip.GeodeticMethodTip"));
@@ -676,13 +668,11 @@ public class SimulationEditDialog extends JDialog {
 		
 		sub.add(subsub, "spanx, wrap para");
 		
-
+		
 		//// Time step:
 		label = new JLabel(trans.get("simedtdlg.lbl.Timestep"));
-		tip = trans.get("simedtdlg.lbl.ttip.Timestep1") +
-				trans.get("simedtdlg.lbl.ttip.Timestep2") + " " +
-				UnitGroup.UNITS_TIME_STEP.toStringUnit(RK4SimulationStepper.RECOMMENDED_TIME_STEP) +
-				".";
+		tip = MessageFormat.format(trans.get("simedtdlg.lbl.ttip.Timestep"),
+				UnitGroup.UNITS_TIME_STEP.toStringUnit(RK4SimulationStepper.RECOMMENDED_TIME_STEP));
 		label.setToolTipText(tip);
 		sub.add(label);
 		
@@ -703,15 +693,14 @@ public class SimulationEditDialog extends JDialog {
 		sub.add(slider, "w 75lp, wrap");
 		//sub.add(slider,"wrap");
 		
-
-
-
+		
+		
+		
 		//// Reset to default button
 		JButton button = new JButton(trans.get("simedtdlg.but.resettodefault"));
 		//// Reset the time step to its default value (
-		button.setToolTipText(trans.get("simedtdlg.but.ttip.resettodefault") +
-				UnitGroup.UNITS_SHORT_TIME.toStringUnit(RK4SimulationStepper.RECOMMENDED_TIME_STEP) +
-				").");
+		button.setToolTipText(MessageFormat.format(trans.get("simedtdlg.but.ttip.resettodefault"),
+				UnitGroup.UNITS_SHORT_TIME.toStringUnit(RK4SimulationStepper.RECOMMENDED_TIME_STEP)));
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -722,21 +711,20 @@ public class SimulationEditDialog extends JDialog {
 		
 		sub.add(button, "align left");
 		
-
-
-
+		
+		
+		
 		//// Simulation listeners
 		sub = new JPanel(new MigLayout("fill, gap 0 0"));
 		//// Simulator listeners
 		sub.setBorder(BorderFactory.createTitledBorder(trans.get("simedtdlg.border.Simlist")));
 		panel.add(sub, "growx, growy");
 		
-
+		
 		DescriptionArea desc = new DescriptionArea(5);
 		//// <html><i>Simulation listeners</i> is an advanced feature that allows user-written code to listen to and interact with the simulation.  
 		//// For details on writing simulation listeners, see the OpenRocket technical documentation.
-		desc.setText(trans.get("simedtdlg.txt.longA1") +
-				trans.get("simedtdlg.txt.longA2"));
+		desc.setText(trans.get("simedtdlg.txt.longA"));
 		sub.add(desc, "aligny 0, growx, wrap para");
 		
 		//// Current listeners:
@@ -792,10 +780,9 @@ public class SimulationEditDialog extends JDialog {
 		});
 		sub.add(button, "sizegroup buttons, alignx 50%");
 		
-
+		
 		return panel;
 	}
-	
 	
 	private class ListenerListModel extends AbstractListModel {
 		@Override
@@ -816,8 +803,8 @@ public class SimulationEditDialog extends JDialog {
 	}
 	
 	
-
-
+	
+	
 	/**
 	 * A panel for plotting the previously calculated data.
 	 */
@@ -833,7 +820,7 @@ public class SimulationEditDialog extends JDialog {
 	}
 	
 	
-
+	
 	/**
 	 * A panel for exporting the data.
 	 */
@@ -849,7 +836,7 @@ public class SimulationEditDialog extends JDialog {
 		return new SimulationExportPanel(simulation);
 	}
 	
-
+	
 	/**
 	 * Return a panel stating that there is no data available, and that the user
 	 * should run the simulation first.
@@ -876,13 +863,13 @@ public class SimulationEditDialog extends JDialog {
 		PlotConfiguration filled = config.fillAutoAxes(branch);
 		List<Axis> axes = filled.getAllAxes();
 		
-
+		
 		// Create the data series for both axes
 		XYSeriesCollection[] data = new XYSeriesCollection[2];
 		data[0] = new XYSeriesCollection();
 		data[1] = new XYSeriesCollection();
 		
-
+		
 		// Get the domain axis type
 		final FlightDataType domainType = filled.getDomainAxisType();
 		final Unit domainUnit = filled.getDomainAxisUnit();
@@ -891,7 +878,7 @@ public class SimulationEditDialog extends JDialog {
 		}
 		List<Double> x = branch.get(domainType);
 		
-
+		
 		// Create the XYSeries objects from the flight data and store into the collections
 		int length = filled.getTypeCount();
 		String[] axisLabel = new String[2];
@@ -917,7 +904,7 @@ public class SimulationEditDialog extends JDialog {
 				axisLabel[axis] += "; " + type.getName();
 		}
 		
-
+		
 		// Create the chart using the factory to get all default settings
 		JFreeChart chart = ChartFactory.createXYLineChart(
 				//// Simulated flight
@@ -931,7 +918,7 @@ public class SimulationEditDialog extends JDialog {
 				false
 				);
 		
-
+		
 		// Add the data and formatting to the plot
 		XYPlot plot = chart.getXYPlot();
 		int axisno = 0;
@@ -958,7 +945,7 @@ public class SimulationEditDialog extends JDialog {
 		plot.addDomainMarker(new ValueMarker(0));
 		plot.addRangeMarker(new ValueMarker(0));
 		
-
+		
 		// Create the dialog
 		//// Simulation results
 		final JDialog dialog = new JDialog(this, trans.get("simedtdlg.dlg.Simres"));
@@ -1026,7 +1013,7 @@ public class SimulationEditDialog extends JDialog {
 	}
 	
 	
-
+	
 	private class ListenerCellRenderer extends JLabel implements ListCellRenderer {
 		
 		@Override

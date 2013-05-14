@@ -4,6 +4,7 @@ package net.sf.openrocket.gui.configdialog;
 import java.awt.Window;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.text.MessageFormat;
 
 import javax.swing.JDialog;
 
@@ -30,10 +31,10 @@ public class ComponentConfigDialog extends JDialog implements ComponentChangeLis
 	private static final String CONFIGDIALOGPACKAGE = "net.sf.openrocket.gui.configdialog";
 	private static final String CONFIGDIALOGPOSTFIX = "Config";
 	
-
+	
 	private static ComponentConfigDialog dialog = null;
 	
-
+	
 	private OpenRocketDocument document = null;
 	private RocketComponent component = null;
 	private RocketComponentConfig configurator = null;
@@ -78,7 +79,7 @@ public class ComponentConfigDialog extends JDialog implements ComponentChangeLis
 		configurator.updateFields();
 		
 		//// configuration
-		setTitle(trans.get("ComponentCfgDlg.configuration1") + " " + component.getComponentName() + " " + trans.get("ComponentCfgDlg.configuration"));
+		setTitle(MessageFormat.format(trans.get("ComponentCfgDlg.configuration"), component.getComponentName()));
 		
 		this.pack();
 	}
@@ -170,8 +171,8 @@ public class ComponentConfigDialog extends JDialog implements ComponentChangeLis
 	}
 	
 	
-
-
+	
+	
 	//////////  Static dialog  /////////
 	
 	/**

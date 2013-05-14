@@ -6,6 +6,7 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.MessageFormat;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -170,8 +171,7 @@ public class MotorConfig extends JPanel {
 		} else {
 			//// The current design has 
 			//// stages.
-			panel.add(new StyledLabel(trans.get("MotorCfg.lbl.longB1") + " " + stages + " " +
-					trans.get("MotorCfg.lbl.longB2"), -1),
+			panel.add(new StyledLabel(MessageFormat.format(trans.get("MotorCfg.lbl.longB"), stages), -1),
 					"spanx, wrap para");
 		}
 		

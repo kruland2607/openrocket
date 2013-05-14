@@ -1,5 +1,14 @@
-#Tue Dec 27 21:59:43 EET 2011
 eclipse.preferences.version=1
 encoding//doc/design/simulation-sequence.uml=UTF-8
 encoding//doc/design/simulation-sequence.umlseq=UTF-8
+encoding//resources/l10n/messages.properties=ISO-8859-1
+encoding//resources/l10n/messages_cs.properties=ISO-8859-1
+encoding//resources/l10n/messages_de.properties=ISO-8859-1
+encoding//resources/l10n/messages_es.properties=ISO-8859-1
+encoding//resources/l10n/messages_fr.properties=ISO-8859-1
+encoding//resources/l10n/messages_it.properties=ISO-8859-1
+encoding//resources/l10n/messages_ja.properties=ISO-8859-1
+encoding//resources/l10n/messages_pl.properties=ISO-8859-1
+encoding//resources/l10n/messages_pt.properties=ISO-8859-1
+encoding//resources/l10n/messages_ru.properties=ISO-8859-1
 encoding/<project>=UTF-8

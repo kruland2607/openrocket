@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.Arrays;
 
 import javax.swing.BorderFactory;
@@ -23,8 +24,8 @@ import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.gui.util.FileHelper;
 import net.sf.openrocket.gui.util.GUIUtil;
-import net.sf.openrocket.gui.util.SwingPreferences;
 import net.sf.openrocket.gui.util.SaveCSVWorker;
+import net.sf.openrocket.gui.util.SwingPreferences;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.simulation.FlightData;
 import net.sf.openrocket.simulation.FlightDataBranch;
@@ -63,7 +64,7 @@ public class SimulationExportPanel extends JPanel {
 		JPanel panel;
 		JButton button;
 		
-
+		
 		this.simulation = sim;
 		
 		// TODO: MEDIUM: Only exports primary branch
@@ -76,7 +77,7 @@ public class SimulationExportPanel extends JPanel {
 			throw new IllegalArgumentException("No data for panel");
 		}
 		
-
+		
 		// Create the data model
 		branch = data.getBranch(0);
 		
@@ -90,10 +91,10 @@ public class SimulationExportPanel extends JPanel {
 			units[i] = types[i].getUnitGroup().getDefaultUnit();
 		}
 		
-
+		
 		//// Create the panel
 		
-
+		
 		// Set up the variable selection table
 		tableModel = new SelectionTableModel();
 		table = new JTable(tableModel);
@@ -152,14 +153,14 @@ public class SimulationExportPanel extends JPanel {
 		});
 		panel.add(button, "growx 1, sizegroup selectbutton, wrap");
 		
-
+		
 		selectedCountLabel = new JLabel();
 		updateSelectedCount();
 		panel.add(selectedCountLabel);
 		
 		this.add(panel, "grow 100, wrap");
 		
-
+		
 		// These need to be in the order of the OPTIONS_XXX indices
 		csvOptions = new CsvOptionPanel(SimulationExportPanel.class,
 				trans.get("SimExpPan.checkbox.Includesimudesc"),
@@ -171,12 +172,12 @@ public class SimulationExportPanel extends JPanel {
 		
 		this.add(csvOptions, "spany, split, growx 1");
 		
-
+		
 		// Space-filling panel
 		panel = new JPanel();
 		this.add(panel, "width 1, height 1, grow 1");
 		
-
+		
 		// Export button
 		button = new JButton(trans.get("SimExpPan.but.Exporttofile"));
 		button.addActionListener(new ActionListener() {
@@ -207,7 +208,7 @@ public class SimulationExportPanel extends JPanel {
 			return;
 		}
 		
-
+		
 		String commentChar = csvOptions.getCommentCharacter();
 		String fieldSep = csvOptions.getFieldSeparator();
 		boolean simulationComment = csvOptions.getSelectionOption(OPTION_SIMULATION_COMMENTS);
@@ -224,7 +225,7 @@ public class SimulationExportPanel extends JPanel {
 				n++;
 		}
 		
-
+		
 		FlightDataType[] fieldTypes = new FlightDataType[n];
 		Unit[] fieldUnits = new Unit[n];
 		int pos = 0;
@@ -242,7 +243,7 @@ public class SimulationExportPanel extends JPanel {
 			fieldSep = "\t";
 		}
 		
-
+		
 		SaveCSVWorker.export(file, simulation, branch, fieldTypes, fieldUnits, fieldSep,
 				commentChar, simulationComment, fieldComment, eventComment,
 				SwingUtilities.getWindowAncestor(this));
@@ -261,19 +262,18 @@ public class SimulationExportPanel extends JPanel {
 		
 		if (n == 1) {
 			//// Exporting 1 variable out of 
-			str = trans.get("SimExpPan.ExportingVar.desc1") + " " + total + ".";
+			str = MessageFormat.format(trans.get("SimExpPan.ExportingVar.desc1"), total);
 		} else {
 			//// Exporting 
 			//// variables out of
-			str = trans.get("SimExpPan.ExportingVar.desc2") + " " + n + " " +
-					trans.get("SimExpPan.ExportingVar.desc3") + " " + total + ".";
+			str = MessageFormat.format(trans.get("SimExpPan.ExportingVar.desc2"), n, total);
 		}
 		
 		selectedCountLabel.setText(str);
 	}
 	
 	
-
+	
 	/**
 	 * A table cell renderer that uses another renderer and sets the background and
 	 * foreground of the returned component based on the selection of the variable.

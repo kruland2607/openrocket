@@ -44,7 +44,7 @@ public class CsvOptionPanel extends JPanel {
 		JLabel label;
 		String tip;
 		
-
+		
 		// TODO: HIGH: Rename the translation keys
 		
 		// Field separator panel
@@ -52,8 +52,7 @@ public class CsvOptionPanel extends JPanel {
 		panel.setBorder(BorderFactory.createTitledBorder(trans.get("SimExpPan.border.Fieldsep")));
 		
 		label = new JLabel(trans.get("SimExpPan.lbl.Fieldsepstr"));
-		tip = trans.get("SimExpPan.lbl.longA1") +
-				trans.get("SimExpPan.lbl.longA2");
+		tip = trans.get("SimExpPan.lbl.longA");
 		label.setToolTipText(tip);
 		panel.add(label, "gapright unrel");
 		
@@ -65,13 +64,13 @@ public class CsvOptionPanel extends JPanel {
 		
 		this.add(panel, "growx, wrap unrel");
 		
-
-
+		
+		
 		// Comments separator panel
 		panel = new JPanel(new MigLayout("fill"));
 		panel.setBorder(BorderFactory.createTitledBorder(trans.get("SimExpPan.border.Comments")));
 		
-
+		
 		// List of include comments options
 		if (includeComments.length % 2 == 1) {
 			throw new IllegalArgumentException("Invalid argument length, must be even, length=" + includeComments.length);
@@ -84,7 +83,7 @@ public class CsvOptionPanel extends JPanel {
 			panel.add(options[i], "wrap");
 		}
 		
-
+		
 		label = new JLabel(trans.get("SimExpPan.lbl.Commentchar"));
 		tip = trans.get("SimExpPan.lbl.ttip.Commentchar");
 		label.setToolTipText(tip);
