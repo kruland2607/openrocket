@@ -7,4 +7,51 @@
          <weburl></weburl>
      </entry>
      
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>Clustered Rocket</name>
+         <category>Example</category>
+         <downloadurl>Clustered rocket design.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+     
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>Hybrid with dual deployment</name>
+         <category>Example</category>
+         <downloadurl>Hybrid rocket with dual parachute deployment.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>Presets</name>
+         <category>Example</category>
+         <downloadurl>Preset Usage.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>Roll-stabilized</name>
+         <category>Example</category>
+         <downloadurl>Roll-stabilized rocket.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>Simulation listeners</name>
+         <category>Example</category>
+         <downloadurl>Simulation listeners.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>Three Stage Rocket</name>
+         <category>Example</category>
+         <downloadurl>Three-stage rocket.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
 </entries>
