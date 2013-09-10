@@ -8,7 +8,7 @@ public class RemoteHostRegistry {
 	private static List<RemoteHost> hosts = new ArrayList<RemoteHost>();
 
 	static {
-		hosts.add( new RemoteHost("OpenRocket Examples", "https://raw.github.com/kruland2607/openrocket/library-featuredownload/core/resources/datafiles/examples/") );
+		hosts.add( new RemoteHost("OpenRocket Examples", "https://raw.github.com/kruland2607/openrocket/feature-librarydownload/core/resources/datafiles/examples/") );
 	}
 	
 	public static List<RemoteHost> getHosts() {
