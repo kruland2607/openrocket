@@ -15,6 +15,10 @@ public class LibraryContentsModel extends AbstractTableModel {
 
 	private List<LibraryEntry> contents = Collections.<LibraryEntry>emptyList();
 
+	public void clear() {
+		setContents( Collections.<LibraryEntry>emptyList() );
+	}
+	
 	public void setContents( List<LibraryEntry> entries ) {
 		contents = entries;
 		fireTableDataChanged();

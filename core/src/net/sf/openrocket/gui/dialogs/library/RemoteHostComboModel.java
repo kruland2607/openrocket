@@ -5,20 +5,26 @@ import java.util.List;
 import javax.print.attribute.UnmodifiableSetException;
 import javax.swing.DefaultComboBoxModel;
 
+import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.library.RemoteHost;
 import net.sf.openrocket.library.RemoteHostRegistry;
+import net.sf.openrocket.startup.Application;
 
 
 public class RemoteHostComboModel extends DefaultComboBoxModel<String> {
+
+	private static final Translator trans = Application.getTranslator();
 
 	private static String[] hosts;
 	
 	static {
 		List<RemoteHost> hostsList = RemoteHostRegistry.getHosts();
-		hosts = new String[hostsList.size()];
-		for( int i =0; i< hostsList.size(); i++ ) {
+		hosts = new String[hostsList.size() + 1];
+		hosts[0] = trans.get("LoadFromLibraryDialog.select");
+		int i = 1;
+		for( RemoteHost host : hostsList ) {
 			
-			hosts[i] = hostsList.get(i).getDisplayName();
+			hosts[i++] = host.getDisplayName();
 		}
 	}
 	
@@ -35,7 +41,7 @@ public class RemoteHostComboModel extends DefaultComboBoxModel<String> {
 			}
 		}
 		
-		return new RemoteHost( host, host);
+		return null;
 	}
 	
 	@Override

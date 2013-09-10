@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -20,6 +21,7 @@ import javax.swing.table.TableRowSorter;
 
 import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.gui.main.BasicFrame;
+import net.sf.openrocket.gui.util.GUIUtil;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.library.LibraryEntry;
 import net.sf.openrocket.library.RemoteHost;
@@ -54,7 +56,11 @@ public class LoadFromLibraryDialog extends JDialog {
 				JComboBox combo = (JComboBox) e.getSource();
 				RemoteHostComboModel model = (RemoteHostComboModel) combo.getModel();
 				RemoteHost host = model.getSelectedRemoteHost();
-				LoadFromLibraryDialog.this.loadDataFromRemoteHost(host);
+				if ( host == null ) {
+					LoadFromLibraryDialog.this.clear();
+				} else {
+					LoadFromLibraryDialog.this.loadDataFromRemoteHost(host);
+				}
 			}
 
 		});
@@ -96,19 +102,27 @@ public class LoadFromLibraryDialog extends JDialog {
 		panel.add(cancelButton, "tag cancel");
 
 		this.add(panel);
+		this.validate();
+		this.pack();
+		this.setLocationByPlatform(true);
+
+		GUIUtil.setDisposableDialogOptions(this, cancelButton);
 
 	}
 
+	private void clear() {
+		libraryContentsModel.clear();
+	}
+	
 	private void loadDataFromRemoteHost( RemoteHost host ) {
 
 		try {
 			RemoteLibraryClient client = new RemoteLibraryClient( host );
 			List<LibraryEntry> entries = client.getListing();
 			libraryContentsModel.setContents(entries);
-			libraryContentsModel.fireTableDataChanged();
 		} catch (RemoteLibraryException rex ) {
-			// FIXME - display dialog
-			throw new BugException(rex);
+			libraryContentsModel.clear();
+			showErrorDialog(rex.getLocalizedMessage());
 		}
 	}
 
@@ -119,8 +133,7 @@ public class LoadFromLibraryDialog extends JDialog {
 			InputStream is = client.downloadModel(entry.getDownloadURL());
 			BasicFrame.open(is, entry.getName(), this.getOwner() );
 		} catch ( RemoteLibraryException rex ) {
-			// FIXME - display dialog
-			throw new BugException(rex);
+			showErrorDialog(rex.getLocalizedMessage());
 		} finally {
 			close();
 		}
@@ -128,5 +141,9 @@ public class LoadFromLibraryDialog extends JDialog {
 
 	private void close() {
 		this.setVisible(false);
+	}
+	
+	private void showErrorDialog( String message ) {
+		JOptionPane.showMessageDialog(this, trans.get("LoadFromLibraryDialog.error.message") + "\n" + message, trans.get("LoadFromLibraryDialog.error.title"), JOptionPane.ERROR_MESSAGE);
 	}
 }
