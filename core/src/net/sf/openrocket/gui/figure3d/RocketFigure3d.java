@@ -21,6 +21,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
+import javax.media.opengl.GLRunnable;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.fixedfunc.GLLightingFunc;
 import javax.media.opengl.fixedfunc.GLMatrixFunc;
@@ -31,16 +32,18 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 
+import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.gui.figureelements.CGCaret;
 import net.sf.openrocket.gui.figureelements.CPCaret;
 import net.sf.openrocket.gui.figureelements.FigureElement;
 import net.sf.openrocket.gui.main.Splash;
-import net.sf.openrocket.logging.LogHelper;
 import net.sf.openrocket.rocketcomponent.Configuration;
 import net.sf.openrocket.rocketcomponent.RocketComponent;
-import net.sf.openrocket.startup.Application;
 import net.sf.openrocket.util.Coordinate;
 import net.sf.openrocket.util.MathUtil;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jogamp.opengl.util.awt.Overlay;
 
@@ -48,8 +51,13 @@ import com.jogamp.opengl.util.awt.Overlay;
  * @author Bill Kuker <bkuker@billkuker.com>
  */
 public class RocketFigure3d extends JPanel implements GLEventListener {
+	
+	public static final int TYPE_FIGURE = 0;
+	public static final int TYPE_UNFINISHED = 1;
+	public static final int TYPE_FINISHED = 2;
+	
 	private static final long serialVersionUID = 1L;
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(RocketFigure3d.class);
 	
 	static {
 		//this allows the GL canvas and things like the motor selection
@@ -61,7 +69,8 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	private static double fovX = Double.NaN;
 	private static final int CARET_SIZE = 20;
 	
-	private Configuration configuration;
+	private final OpenRocketDocument document;
+	private final Configuration configuration;
 	private GLCanvas canvas;
 	
 	
@@ -81,9 +90,10 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	
 	float[] lightPosition = new float[] { 1, 4, 1, 0 };
 	
-	RocketRenderer rr = new RocketRenderer();
+	RocketRenderer rr = new FigureRenderer();
 	
-	public RocketFigure3d(Configuration config) {
+	public RocketFigure3d(final OpenRocketDocument document, final Configuration config) {
+		this.document = document;
 		this.configuration = config;
 		this.setLayout(new BorderLayout());
 		
@@ -96,6 +106,16 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 			
 			initGLCanvas();
 		}
+	}
+	
+	public void flushTextureCaches() {
+		canvas.invoke(true, new GLRunnable() {
+			@Override
+			public boolean run(GLAutoDrawable drawable) {
+				rr.flushTextureCache(drawable);
+				return false;
+			}
+		});
 	}
 	
 	/**
@@ -112,34 +132,31 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 		try {
 			log.debug("Setting up GL capabilities...");
 			
-			log.verbose("GL - Getting Default Profile");
-			GLProfile glp = GLProfile.getDefault();
+			log.trace("GL - Getting Default Profile");
+			final GLProfile glp = GLProfile.get(GLProfile.GL2);
 			
-			log.verbose("GL - creating GLCapabilities");
-			GLCapabilities caps = new GLCapabilities(glp);
+			log.trace("GL - creating GLCapabilities");
+			final GLCapabilities caps = new GLCapabilities(glp);
 			
-			log.verbose("GL - setSampleBuffers");
+			log.trace("GL - setSampleBuffers");
 			caps.setSampleBuffers(true);
 			
-			log.verbose("GL - setNumSamples");
+			log.trace("GL - setNumSamples");
 			caps.setNumSamples(6);
 			
-			log.verbose("GL - setStencilBits");
-			caps.setStencilBits(1);
-			
-			log.verbose("GL - Creating Canvas");
+			log.trace("GL - Creating Canvas");
 			canvas = new GLCanvas(caps);
 			
-			log.verbose("GL - Registering as GLEventListener on canvas");
+			log.trace("GL - Registering as GLEventListener on canvas");
 			canvas.addGLEventListener(this);
 			
-			log.verbose("GL - Adding canvas to this JPanel");
+			log.trace("GL - Adding canvas to this JPanel");
 			this.add(canvas, BorderLayout.CENTER);
 			
-			log.verbose("GL - Setting up mouse listeners");
+			log.trace("GL - Setting up mouse listeners");
 			setupMouseListeners();
 			
-			log.verbose("GL - Rasterizine Carets"); //reticulating splines?
+			log.trace("GL - Rasterizing Carets");
 			rasterizeCarets();
 			
 		} catch (Throwable t) {
@@ -202,21 +219,25 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 			MouseEvent pressEvent;
 			
 			@Override
-			public void mousePressed(MouseEvent e) {
+			public void mousePressed(final MouseEvent e) {
 				lastX = e.getX();
 				lastY = e.getY();
 				pressEvent = e;
 			}
 			
 			@Override
-			public void mouseClicked(MouseEvent e) {
+			public void mouseClicked(final MouseEvent e) {
 				pickPoint = new Point(lastX, canvas.getHeight() - lastY);
 				pickEvent = e;
 				internalRepaint();
 			}
 			
 			@Override
-			public void mouseDragged(MouseEvent e) {
+			public void mouseDragged(final MouseEvent e) {
+				//You can get a drag without a press while a modal dialog is shown
+				if (pressEvent == null)
+					return;
+				
 				int dx = lastX - e.getX();
 				int dy = lastY - e.getY();
 				lastX = e.getX();
@@ -242,13 +263,9 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 		canvas.addMouseListener(a);
 	}
 	
-	public void setConfiguration(Configuration configuration) {
-		this.configuration = configuration;
-		updateFigure();
-	}
 	
 	@Override
-	public void display(GLAutoDrawable drawable) {
+	public void display(final GLAutoDrawable drawable) {
 		GL2 gl = drawable.getGL().getGL2();
 		GLU glu = new GLU();
 		
@@ -263,13 +280,17 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 			gl.glDisable(GLLightingFunc.GL_LIGHTING);
 			final RocketComponent picked = rr.pick(drawable, configuration,
 					pickPoint, pickEvent.isShiftDown() ? selection : null);
-			if (csl != null && picked != null) {
+			if (csl != null) {
 				final MouseEvent e = pickEvent;
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						csl.componentClicked(new RocketComponent[] { picked },
-								e);
+						if (picked == null) {
+							log.debug("unselecting");
+							csl.componentClicked(new RocketComponent[] {}, e);
+						} else {
+							csl.componentClicked(new RocketComponent[] { picked }, e);
+						}
 					}
 				});
 				
@@ -288,7 +309,7 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	}
 	
 	
-	private void drawCarets(GL2 gl, GLU glu) {
+	private void drawCarets(final GL2 gl, final GLU glu) {
 		final Graphics2D og2d = caretOverlay.createGraphics();
 		setRenderingHints(og2d);
 		
@@ -336,7 +357,7 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	 * Re-blits the overlay every frame. Only re-renders the overlay
 	 * when needed.
 	 */
-	private void drawExtras(GL2 gl, GLU glu) {
+	private void drawExtras(final GL2 gl, final GLU glu) {
 		//Only re-render if needed
 		//	redrawExtras: Some external change (new simulation data) means
 		//		the data is out of date.
@@ -372,19 +393,19 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	}
 	
 	@Override
-	public void dispose(GLAutoDrawable drawable) {
-		log.verbose("GL - dispose() called");
+	public void dispose(final GLAutoDrawable drawable) {
+		log.trace("GL - dispose() called");
+		rr.dispose(drawable);
 	}
 	
 	@Override
-	public void init(GLAutoDrawable drawable) {
-		log.verbose("GL - init() called");
-		rr.init(drawable);
+	public void init(final GLAutoDrawable drawable) {
+		log.trace("GL - init()");
 		
-		GL2 gl = drawable.getGL().getGL2();
+		final GL2 gl = drawable.getGL().getGL2();
 		gl.glClearDepth(1.0f); // clear z-buffer to the farthest
 		
-		gl.glDepthFunc(GL.GL_LEQUAL); // the type of depth test to do
+		gl.glDepthFunc(GL.GL_LESS); // the type of depth test to do
 		
 		float amb = 0.5f;
 		float dif = 1.0f;
@@ -401,28 +422,27 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 		
 		gl.glEnable(GLLightingFunc.GL_NORMALIZE);
 		
+		rr.init(drawable);
+		
 		extrasOverlay = new Overlay(drawable);
 		caretOverlay = new Overlay(drawable);
-		
-		log.verbose("GL - init() complete");
 	}
 	
 	@Override
-	public void reshape(GLAutoDrawable drawable, int x, int y, int w, int h) {
-		log.verbose("GL - reshape() called");
-		GL2 gl = drawable.getGL().getGL2();
-		GLU glu = new GLU();
+	public void reshape(final GLAutoDrawable drawable, final int x, final int y, final int w, final int h) {
+		log.trace("GL - reshape()");
+		final GL2 gl = drawable.getGL().getGL2();
+		final GLU glu = new GLU();
 		
-		double ratio = (double) w / (double) h;
+		final double ratio = (double) w / (double) h;
 		fovX = fovY * ratio;
 		
 		gl.glMatrixMode(GLMatrixFunc.GL_PROJECTION);
 		gl.glLoadIdentity();
-		glu.gluPerspective(fovY, ratio, 0.05f, 100f);
+		glu.gluPerspective(fovY, ratio, 0.1f, 50f);
 		gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
 		
 		redrawExtras = true;
-		log.verbose("GL - reshape() complete");
 	}
 	
 	@SuppressWarnings("unused")
@@ -433,49 +453,55 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 		double rMax;
 	}
 	
+	private Bounds cachedBounds = null;
+	
 	/**
 	 * Calculates the bounds for the current configuration
 	 * 
 	 * @return
 	 */
 	private Bounds calculateBounds() {
-		Bounds ret = new Bounds();
-		Collection<Coordinate> bounds = configuration.getBounds();
-		for (Coordinate c : bounds) {
-			ret.xMax = Math.max(ret.xMax, c.x);
-			ret.xMin = Math.min(ret.xMin, c.x);
-			
-			ret.yMax = Math.max(ret.yMax, c.y);
-			ret.yMin = Math.min(ret.yMin, c.y);
-			
-			ret.zMax = Math.max(ret.zMax, c.z);
-			ret.zMin = Math.min(ret.zMin, c.z);
-			
-			double r = MathUtil.hypot(c.y, c.z);
-			ret.rMax = Math.max(ret.rMax, r);
+		if (cachedBounds != null) {
+			return cachedBounds;
+		} else {
+			final Bounds b = new Bounds();
+			final Collection<Coordinate> bounds = configuration.getBounds();
+			for (Coordinate c : bounds) {
+				b.xMax = Math.max(b.xMax, c.x);
+				b.xMin = Math.min(b.xMin, c.x);
+				
+				b.yMax = Math.max(b.yMax, c.y);
+				b.yMin = Math.min(b.yMin, c.y);
+				
+				b.zMax = Math.max(b.zMax, c.z);
+				b.zMin = Math.min(b.zMin, c.z);
+				
+				double r = MathUtil.hypot(c.y, c.z);
+				b.rMax = Math.max(b.rMax, r);
+			}
+			b.xSize = b.xMax - b.xMin;
+			b.ySize = b.yMax - b.yMin;
+			b.zSize = b.zMax - b.zMin;
+			cachedBounds = b;
+			return b;
 		}
-		ret.xSize = ret.xMax - ret.xMin;
-		ret.ySize = ret.yMax - ret.yMin;
-		ret.zSize = ret.zMax - ret.zMin;
-		return ret;
 	}
 	
-	private void setupView(GL2 gl, GLU glu) {
-		log.verbose("GL - setupView() called");
+	private void setupView(final GL2 gl, final GLU glu) {
 		gl.glLoadIdentity();
 		
 		gl.glLightfv(GLLightingFunc.GL_LIGHT1, GLLightingFunc.GL_POSITION,
 				lightPosition, 0);
 		
 		// Get the bounds
-		Bounds b = calculateBounds();
+		final Bounds b = calculateBounds();
 		
 		// Calculate the distance needed to fit the bounds in both the X and Y
 		// direction
 		// Add 10% for space around it.
-		double dX = (b.xSize * 1.2 / 2.0)
+		final double dX = (b.xSize * 1.2 / 2.0)
 				/ Math.tan(Math.toRadians(fovX / 2.0));
-		double dY = (b.rMax * 2.0 * 1.2 / 2.0)
+		final double dY = (b.rMax * 2.0 * 1.2 / 2.0)
 				/ Math.tan(Math.toRadians(fovY / 2.0));
 		
 		// Move back the greater of the 2 distances
@@ -497,8 +523,6 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 		gl.glScaled(-1, 1, 1);
 		gl.glTranslated(-1, 0, 0);
 		gl.glMatrixMode(GLMatrixFunc.GL_MODELVIEW);
-		
-		log.verbose("GL - setupView() complete");
 	}
 	
 	/**
@@ -506,29 +530,33 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	 */
 	public void updateFigure() {
 		log.debug("3D Figure Updated");
-		rr.updateFigure();
-		internalRepaint();
+		cachedBounds = null;
+		if (canvas != null) {
+			canvas.invoke(true, new GLRunnable() {
+				@Override
+				public boolean run(GLAutoDrawable drawable) {
+					rr.updateFigure(drawable);
+					return false;
+				}
+			});
+		}
 	}
 	
 	private void internalRepaint() {
-		log.verbose("GL - internalRepaint() called");
 		super.repaint();
 		if (canvas != null)
 			canvas.display();
-		log.verbose("GL - internalRepaint() complete");
 	}
 	
 	@Override
 	public void repaint() {
-		log.verbose("GL - repaint() called");
 		redrawExtras = true;
 		internalRepaint();
-		log.verbose("GL - repaint() complete");
 	}
 	
 	private Set<RocketComponent> selection = new HashSet<RocketComponent>();
 	
-	public void setSelection(RocketComponent[] selection) {
+	public void setSelection(final RocketComponent[] selection) {
 		this.selection.clear();
 		if (selection != null) {
 			for (RocketComponent c : selection)
@@ -537,14 +565,14 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 		internalRepaint();
 	}
 	
-	private void setRoll(double rot) {
+	private void setRoll(final double rot) {
 		if (MathUtil.equals(roll, rot))
 			return;
 		this.roll = MathUtil.reduce360(rot);
 		internalRepaint();
 	}
 	
-	private void setYaw(double rot) {
+	private void setYaw(final double rot) {
 		if (MathUtil.equals(yaw, rot))
 			return;
 		this.yaw = MathUtil.reduce360(rot);
@@ -553,21 +581,19 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	
 	// ///////////// Extra methods
 	
-	private Coordinate project(Coordinate c, GL2 gl, GLU glu) {
-		log.verbose("GL - project() called");
-		double[] mvmatrix = new double[16];
-		double[] projmatrix = new double[16];
-		int[] viewport = new int[4];
+	private Coordinate project(final Coordinate c, final GL2 gl, final GLU glu) {
+		final double[] mvmatrix = new double[16];
+		final double[] projmatrix = new double[16];
+		final int[] viewport = new int[4];
 		
 		gl.glGetIntegerv(GL.GL_VIEWPORT, viewport, 0);
 		gl.glGetDoublev(GLMatrixFunc.GL_MODELVIEW_MATRIX, mvmatrix, 0);
 		gl.glGetDoublev(GLMatrixFunc.GL_PROJECTION_MATRIX, projmatrix, 0);
 		
-		double out[] = new double[4];
+		final double out[] = new double[4];
 		glu.gluProject(c.x, c.y, c.z, mvmatrix, 0, projmatrix, 0, viewport, 0,
 				out, 0);
 		
-		log.verbose("GL - peoject() complete");
 		return new Coordinate(out[0], out[1], out[2]);
 		
 	}
@@ -575,22 +601,22 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	private Coordinate cp = new Coordinate(0, 0, 0);
 	private Coordinate cg = new Coordinate(0, 0, 0);
 	
-	public void setCG(Coordinate cg) {
+	public void setCG(final Coordinate cg) {
 		this.cg = cg;
 		redrawExtras = true;
 	}
 	
-	public void setCP(Coordinate cp) {
+	public void setCP(final Coordinate cp) {
 		this.cp = cp;
 		redrawExtras = true;
 	}
 	
-	public void addRelativeExtra(FigureElement p) {
+	public void addRelativeExtra(final FigureElement p) {
 		relativeExtra.add(p);
 		redrawExtras = true;
 	}
 	
-	public void removeRelativeExtra(FigureElement p) {
+	public void removeRelativeExtra(final FigureElement p) {
 		relativeExtra.remove(p);
 		redrawExtras = true;
 	}
@@ -600,12 +626,12 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 		redrawExtras = true;
 	}
 	
-	public void addAbsoluteExtra(FigureElement p) {
+	public void addAbsoluteExtra(final FigureElement p) {
 		absoluteExtra.add(p);
 		redrawExtras = true;
 	}
 	
-	public void removeAbsoluteExtra(FigureElement p) {
+	public void removeAbsoluteExtra(final FigureElement p) {
 		absoluteExtra.remove(p);
 		redrawExtras = true;
 	}
@@ -624,6 +650,46 @@ public class RocketFigure3d extends JPanel implements GLEventListener {
 	public void addComponentSelectionListener(
 			ComponentSelectionListener newListener) {
 		this.csl = newListener;
+	}
+	
+	public void setType(final int t) {
+		//There is no canvas if there was an error while creating it.
+		if (canvas == null)
+			return;
+		
+		// The first time the user selects any 3d figure types,  the canvas' internal _drawable
+		// has not been realized.  Unfortunately, there is a test in canvas.invoke which doesn't
+		// execute the runnable if the drawable isn't realized.
+		// In order to trump this, we test if the canvas has not been realized and initialize
+		// the renderer accordingly.  There is certainly a better way to do this.
+		
+		
+		final RocketRenderer newRR;
+		
+		switch (t) {
+		case TYPE_FINISHED:
+			newRR = new RealisticRenderer(document);
+			break;
+		case TYPE_UNFINISHED:
+			newRR = new UnfinishedRenderer(document);
+			break;
+		default:
+			newRR = new FigureRenderer();
+		}
+		
+		if (!canvas.isRealized()) {
+			rr = newRR;
+		} else {
+			canvas.invoke(true, new GLRunnable() {
+				@Override
+				public boolean run(GLAutoDrawable drawable) {
+					rr.dispose(drawable);
+					rr = newRR;
+					newRR.init(drawable);
+					return false;
+				}
+			});
+		}
 	}
 	
 }

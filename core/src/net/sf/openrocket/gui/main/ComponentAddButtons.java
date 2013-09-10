@@ -25,13 +25,16 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.gui.components.StyledLabel;
 import net.sf.openrocket.gui.configdialog.ComponentConfigDialog;
 import net.sf.openrocket.gui.main.componenttree.ComponentTreeModel;
 import net.sf.openrocket.l10n.Translator;
-import net.sf.openrocket.logging.LogHelper;
+import net.sf.openrocket.logging.Markers;
 import net.sf.openrocket.rocketcomponent.BodyComponent;
 import net.sf.openrocket.rocketcomponent.BodyTube;
 import net.sf.openrocket.rocketcomponent.Bulkhead;
@@ -66,7 +69,7 @@ import net.sf.openrocket.util.Reflection;
  */
 
 public class ComponentAddButtons extends JPanel implements Scrollable {
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(ComponentAddButtons.class);
 	private static final Translator trans = Application.getTranslator();
 	
 	private static final int ROWS = 3;
@@ -188,10 +191,11 @@ public class ComponentAddButtons extends JPanel implements Scrollable {
 			viewport.addChangeListener(new ChangeListener() {
 				private int oldWidth = -1;
 				
+				@Override
 				public void stateChanged(ChangeEvent e) {
-					Dimension d = ComponentAddButtons.this.viewport.getExtentSize();
-					if (d.width != oldWidth) {
-						oldWidth = d.width;
+					Dimension d1 = ComponentAddButtons.this.viewport.getExtentSize();
+					if (d1.width != oldWidth) {
+						oldWidth = d1.width;
 						flowButtons();
 					}
 				}
@@ -356,6 +360,7 @@ public class ComponentAddButtons extends JPanel implements Scrollable {
 		 * Updates the enabled status of the button.
 		 * TODO: LOW: What about updates to the rocket tree?
 		 */
+		@Override
 		public void valueChanged(TreeSelectionEvent e) {
 			updateEnabled();
 		}
@@ -387,7 +392,7 @@ public class ComponentAddButtons extends JPanel implements Scrollable {
 		@Override
 		protected void fireActionPerformed(ActionEvent event) {
 			super.fireActionPerformed(event);
-			log.user("Adding component of type " + componentClass.getSimpleName());
+			log.info(Markers.USER_MARKER, "Adding component of type " + componentClass.getSimpleName());
 			RocketComponent c = null;
 			Integer position = null;
 			

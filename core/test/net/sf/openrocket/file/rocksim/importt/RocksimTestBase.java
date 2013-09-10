@@ -3,29 +3,19 @@
  */
 package net.sf.openrocket.file.rocksim.importt;
 
-import net.sf.openrocket.gui.util.SwingPreferences;
-import net.sf.openrocket.rocketcomponent.RocketComponent;
-import net.sf.openrocket.startup.Application;
-import org.junit.Assert;
-import org.junit.Before;
-
 import java.lang.reflect.Field;
 import java.util.List;
+
+import net.sf.openrocket.rocketcomponent.RocketComponent;
+import net.sf.openrocket.util.BaseTestCase.BaseTestCase;
+
+import org.junit.Assert;
 
 /**
  * A base class for the Rocksim tests.  Includes code from the junitx.addons project.
  */
-public abstract class RocksimTestBase {
+public abstract class RocksimTestBase extends BaseTestCase {
 	
-	/* (non-Javadoc)
-	 * @see junit.framework.TestCase#setUp()
-	 */
-	@Before
-    public void setUp() throws Exception {
-        Application.setPreferences( new SwingPreferences() );
-	}
-
-
 	public void assertContains(RocketComponent child, List<RocketComponent> components) {
 		Assert.assertTrue("Components did not contain child", components.contains(child));
 	}
@@ -41,13 +31,11 @@ public abstract class RocksimTestBase {
 	 * @exception NoSuchFieldException if a field with the specified name is
 	 * not found.
 	 */
-	public static Object getField(Object object,
-									String name)
-			throws NoSuchFieldException {
+	public static Object getField(Object object, String name) throws NoSuchFieldException {
 		if (object == null) {
 			throw new IllegalArgumentException("Invalid null object argument");
 		}
-		for (Class cls = object.getClass(); cls != null; cls = cls.getSuperclass()) {
+		for (Class<?> cls = object.getClass(); cls != null; cls = cls.getSuperclass()) {
 			try {
 				Field field = cls.getDeclaredField(name);
 				field.setAccessible(true);
@@ -73,13 +61,11 @@ public abstract class RocksimTestBase {
 	 * @exception NoSuchFieldException if a field with the specified name is
 	 * not found.
 	 */
-	public static Object getField(Class cls,
-									String name)
-			throws NoSuchFieldException {
+	public static Object getField(Class<?> cls, String name) throws NoSuchFieldException {
 		if (cls == null) {
 			throw new IllegalArgumentException("Invalid null cls argument");
 		}
-		Class base = cls;
+		Class<?> base = cls;
 		while (base != null) {
 			try {
 				Field field = base.getDeclaredField(name);
@@ -96,5 +82,5 @@ public abstract class RocksimTestBase {
 				cls.getName() + "." + name);
 	}
 	
-
+	
 }

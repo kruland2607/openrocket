@@ -3,9 +3,10 @@ package net.sf.openrocket.simulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.sf.openrocket.aerodynamics.WarningSet;
-import net.sf.openrocket.logging.LogHelper;
-import net.sf.openrocket.startup.Application;
 import net.sf.openrocket.util.MathUtil;
 import net.sf.openrocket.util.Mutable;
 
@@ -23,7 +24,7 @@ import net.sf.openrocket.util.Mutable;
  * @author Sampo Niskanen <sampo.niskanen@iki.fi>
  */
 public class FlightData {
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(FlightData.class);
 	
 	/**
 	 * An immutable FlightData object with NaN data.
@@ -226,7 +227,7 @@ public class FlightData {
 		
 
 		// Launch rod velocity
-		eventloop: for (FlightEvent event : branch.getEvents()) {
+		for (FlightEvent event : branch.getEvents()) {
 			if (event.getType() == FlightEvent.Type.LAUNCHROD) {
 				double t = event.getTime();
 				List<Double> velocity = branch.get(FlightDataType.TYPE_VELOCITY_TOTAL);

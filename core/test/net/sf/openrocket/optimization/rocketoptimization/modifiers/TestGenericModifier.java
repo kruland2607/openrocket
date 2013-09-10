@@ -6,12 +6,13 @@ import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.optimization.general.OptimizationException;
 import net.sf.openrocket.rocketcomponent.Rocket;
 import net.sf.openrocket.unit.UnitGroup;
+import net.sf.openrocket.util.BaseTestCase.BaseTestCase;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestGenericModifier {
+public class TestGenericModifier extends BaseTestCase {
 	
 	private TestValue value;
 	private GenericModifier<TestValue> gm;

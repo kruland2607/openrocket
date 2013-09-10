@@ -16,24 +16,25 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
-import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.document.OpenRocketDocument;
-import net.sf.openrocket.file.DatabaseMotorFinder;
 import net.sf.openrocket.file.GeneralRocketLoader;
 import net.sf.openrocket.file.RocketLoadException;
 import net.sf.openrocket.gui.components.UnitSelector;
 import net.sf.openrocket.gui.util.Icons;
 import net.sf.openrocket.l10n.Translator;
-import net.sf.openrocket.logging.LogHelper;
+import net.sf.openrocket.logging.Markers;
 import net.sf.openrocket.simulation.customexpression.CustomExpression;
 import net.sf.openrocket.startup.Application;
 
 public class CustomExpressionPanel extends JPanel {
 	
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(CustomExpressionPanel.class);
 	private static final Translator trans = Application.getTranslator();
 	
 	private JPanel expressionSelectorPanel;
@@ -42,7 +43,7 @@ public class CustomExpressionPanel extends JPanel {
 	public CustomExpressionPanel(final OpenRocketDocument doc, final JDialog parentDialog) {
 		super(new MigLayout("fill"));
 		this.doc = doc;
-
+		
 		expressionSelectorPanel = new JPanel(new MigLayout("gapy rel"));
 		expressionSelectorPanel.setToolTipText(trans.get("customExpressionPanel.lbl.CalcNote"));
 		
@@ -83,28 +84,28 @@ public class CustomExpressionPanel extends JPanel {
 				
 				//Create a file chooser
 				final JFileChooser fc = new JFileChooser();
-				if (doc.getFile() != null){
+				if (doc.getFile() != null) {
 					fc.setCurrentDirectory(doc.getFile().getParentFile());
 				}
 				fc.setFileFilter(new FileNameExtensionFilter("Openrocket file", "ork"));
 				fc.setAcceptAllFileFilterUsed(false);
 				
 				int returnVal = fc.showOpenDialog(CustomExpressionPanel.this);
-				if (returnVal == JFileChooser.APPROVE_OPTION){
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File importFile = fc.getSelectedFile();
-					log.info("User selected a file to import expressions from "+fc.getSelectedFile().toString());
+					log.info("User selected a file to import expressions from " + fc.getSelectedFile().toString());
 					
 					//TODO: This should probably be somewhere else and ideally we would use an alternative minimal rocket loader. Still, it doesn't seem particularly slow this way.
 					
 					// Load expressions from selected document
-					GeneralRocketLoader loader = new GeneralRocketLoader();
+					GeneralRocketLoader loader = new GeneralRocketLoader(importFile);
 					try {
-						OpenRocketDocument importedDocument = loader.load(importFile, new DatabaseMotorFinder());
-						for (CustomExpression exp : importedDocument.getCustomExpressions()){
+						OpenRocketDocument importedDocument = loader.load();
+						for (CustomExpression exp : importedDocument.getCustomExpressions()) {
 							doc.addCustomExpression(exp);
 						}
 					} catch (RocketLoadException e1) {
-						log.user("Error opening document to import expressions from.");
+						log.info(Markers.USER_MARKER, "Error opening document to import expressions from.");
 					}
 					updateExpressions();
 				}
@@ -129,20 +130,20 @@ public class CustomExpressionPanel extends JPanel {
 	/*
 	 * Update the expressionSelectorPanel
 	 */
-	private void updateExpressions(){
+	private void updateExpressions() {
 		
 		expressionSelectorPanel.removeAll();
 		int totalExpressions = doc.getCustomExpressions().size();
-		for (int i=0; i<totalExpressions; i++){
-			SingleExpression se = new SingleExpression(doc.getCustomExpressions().get(i), i != 0, i != totalExpressions-1);
+		for (int i = 0; i < totalExpressions; i++) {
+			SingleExpression se = new SingleExpression(doc.getCustomExpressions().get(i), i != 0, i != totalExpressions - 1);
 			expressionSelectorPanel.add(se, "wrap");
 		}
-
+		
 		expressionSelectorPanel.revalidate();
 		expressionSelectorPanel.repaint();
 	}
 	
-	private void deleteExpression(CustomExpression expression){
+	private void deleteExpression(CustomExpression expression) {
 		doc.getCustomExpressions().remove(expression);
 	}
 	
@@ -151,15 +152,15 @@ public class CustomExpressionPanel extends JPanel {
 	 * @param expression
 	 * @param move integer - +1 to move down, -1 to move up
 	 */
-	private void moveExpression(CustomExpression expression, int move){
+	private void moveExpression(CustomExpression expression, int move) {
 		List<CustomExpression> expressions = doc.getCustomExpressions();
 		int i = expressions.indexOf(expression);
-		if (i+move == expressions.size() || i+move < 0)
+		if (i + move == expressions.size() || i + move < 0)
 			return;
 		else
-			Collections.swap(expressions, i, i+move);
+			Collections.swap(expressions, i, i + move);
 	}
-
+	
 	
 	/*
 	 * A JPanel which configures a single expression
@@ -167,10 +168,10 @@ public class CustomExpressionPanel extends JPanel {
 	private class SingleExpression extends JPanel {
 		
 		// Convenience method to make the labels consistent
-		private JLabel setLabelStyle(JLabel l){
+		private JLabel setLabelStyle(JLabel l) {
 			l.setBackground(Color.WHITE);
 			l.setOpaque(true);
-			l.setBorder(BorderFactory.createRaisedBevelBorder() );
+			l.setBorder(BorderFactory.createRaisedBevelBorder());
 			l.setText(" " + l.getText() + " ");
 			return l;
 		}
@@ -180,15 +181,15 @@ public class CustomExpressionPanel extends JPanel {
 			//                      name:    aName    symbol:  a      Unit:  m/s
 			//super(new MigLayout("","[::100][:200:400][::100][:100:200][::100][:100:200]",""));
 			
-			JLabel nameLabel = new JLabel( trans.get("customExpression.Name")+ " :");
-			JLabel name = new JLabel ( expression.getName() );
+			JLabel nameLabel = new JLabel(trans.get("customExpression.Name") + " :");
+			JLabel name = new JLabel(expression.getName());
 			name = setLabelStyle(name);
-			JLabel symbolLabel = new JLabel( trans.get("customExpression.Symbol")+ " :" );
-			JLabel symbol = new JLabel ( expression.getSymbol());
+			JLabel symbolLabel = new JLabel(trans.get("customExpression.Symbol") + " :");
+			JLabel symbol = new JLabel(expression.getSymbol());
 			symbol = setLabelStyle(symbol);
 			symbol.setBackground(Color.WHITE);
 			
-			JLabel unitLabel = new JLabel( trans.get("customExpression.Units")+ " :");
+			JLabel unitLabel = new JLabel(trans.get("customExpression.Units") + " :");
 			UnitSelector unitSelector = new UnitSelector(expression.getType().getUnitGroup());
 			//JLabel unitSelector = new JLabel ( expression.getUnit() );
 			//unitSelector = setLabelStyle(unitSelector);
@@ -197,9 +198,9 @@ public class CustomExpressionPanel extends JPanel {
 			JButton editButton = new JButton(Icons.EDIT);
 			editButton.setToolTipText(trans.get("customExpression.Units.but.ttip.Edit"));
 			editButton.setBorderPainted(false);
-			editButton.addActionListener( new ActionListener() {
+			editButton.addActionListener(new ActionListener() {
 				@Override
-				public void actionPerformed(ActionEvent e){
+				public void actionPerformed(ActionEvent e) {
 					Window parent = SwingUtilities.getWindowAncestor(CustomExpressionPanel.this);
 					new ExpressionBuilderDialog(parent, doc, expression).setVisible(true);
 					updateExpressions();
@@ -210,7 +211,7 @@ public class CustomExpressionPanel extends JPanel {
 			upButton.setToolTipText(trans.get("customExpression.Units.but.ttip.MoveUp"));
 			upButton.setBorderPainted(false);
 			upButton.setVisible(showUp);
-			upButton.addActionListener( new ActionListener() {
+			upButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					moveExpression(expression, -1);
@@ -222,7 +223,7 @@ public class CustomExpressionPanel extends JPanel {
 			downButton.setToolTipText(trans.get("customExpression.Units.but.ttip.MoveDown"));
 			downButton.setBorderPainted(false);
 			downButton.setVisible(showDown);
-			downButton.addActionListener( new ActionListener() {
+			downButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					moveExpression(expression, 1);

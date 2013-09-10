@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.sf.openrocket.l10n.Translator;
-import net.sf.openrocket.logging.LogHelper;
 import net.sf.openrocket.startup.Application;
 import net.sf.openrocket.unit.UnitGroup;
 import net.sf.openrocket.util.StringUtil;
@@ -25,7 +27,7 @@ import net.sf.openrocket.util.StringUtil;
  */
 public class FlightDataType implements Comparable<FlightDataType> {
 	private static final Translator trans = Application.getTranslator();
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(FlightDataType.class);
 	
 	/** Priority of custom-created variables */
 	private static final int DEFAULT_PRIORITY = 999;
@@ -257,7 +259,6 @@ public class FlightDataType implements Comparable<FlightDataType> {
 	 * @param u		the unit group the new type should belong to if a new group is created.
 	 * @return		a data type.
 	 */
-	@SuppressWarnings("null")
 	public static synchronized FlightDataType getType(String s, String symbol, UnitGroup u) {
 
 		// if symbol is null : try finding by name

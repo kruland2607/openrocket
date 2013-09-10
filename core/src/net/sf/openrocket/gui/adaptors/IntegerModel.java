@@ -6,13 +6,17 @@ import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.EventObject;
 
+import javax.swing.BoundedRangeModel;
+import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import net.sf.openrocket.logging.LogHelper;
-import net.sf.openrocket.startup.Application;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.sf.openrocket.logging.Markers;
 import net.sf.openrocket.util.BugException;
 import net.sf.openrocket.util.ChangeSource;
 import net.sf.openrocket.util.Reflection;
@@ -20,7 +24,7 @@ import net.sf.openrocket.util.StateChangeListener;
 
 
 public class IntegerModel implements StateChangeListener {
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(IntegerModel.class);
 	
 	
 	//////////// JSpinner Model ////////////
@@ -35,14 +39,14 @@ public class IntegerModel implements StateChangeListener {
 		public void setValue(Object value) {
 			if (firing > 0) {
 				// Ignore, if called when model is sending events
-				log.verbose("Ignoring call to SpinnerModel setValue for " + IntegerModel.this.toString() +
+				log.trace("Ignoring call to SpinnerModel setValue for " + IntegerModel.this.toString() +
 						" value=" + value + ", currently firing events");
 				return;
 				
 			}
 			Number num = (Number) value;
 			int newValue = num.intValue();
-			log.user("SpinnerModel setValue called for " + IntegerModel.this.toString() + " newValue=" + newValue);
+			log.info(Markers.USER_MARKER, "SpinnerModel setValue called for " + IntegerModel.this.toString() + " newValue=" + newValue);
 			IntegerModel.this.setValue(newValue);
 		}
 		
@@ -83,7 +87,44 @@ public class IntegerModel implements StateChangeListener {
 		return new IntegerSpinnerModel();
 	}
 	
+	private class ValueSliderModel extends DefaultBoundedRangeModel implements BoundedRangeModel, StateChangeListener {
+		ValueSliderModel(){
+			super(IntegerModel.this.getValue(), 0, minValue, maxValue);
+		}
+		@Override
+		public void setValue(int newValue) {
+			IntegerModel.this.setValue(newValue);
+		}
+
+		@Override
+		public int getValue(){
+			return IntegerModel.this.getValue();
+		}
+		@Override
+		public void stateChanged(EventObject e) {
+			IntegerModel.this.fireStateChanged();
+		}
+		
+		@Override
+		public void addChangeListener(ChangeListener l) {
+			IntegerModel.this.addChangeListener(l);
+		}
+		
+		@Override
+		public void removeChangeListener(ChangeListener l) {
+			IntegerModel.this.removeChangeListener(l);
+		}
+		
+	}
 	
+	/**
+	 * Returns a new BoundedRangeModel with the same base as the IntegerModel.
+	 * 
+	 * @return  A compatibility layer for Sliders.
+	 */
+	public BoundedRangeModel getSliderModel(){
+		return new ValueSliderModel();
+	}
 
 
 	////////////  Main model  /////////////
@@ -194,7 +235,7 @@ public class IntegerModel implements StateChangeListener {
 		}
 		
 		listeners.add(l);
-		log.verbose(this + " adding listener (total " + listeners.size() + "): " + l);
+		log.trace(this + " adding listener (total " + listeners.size() + "): " + l);
 	}
 	
 	/**
@@ -207,7 +248,7 @@ public class IntegerModel implements StateChangeListener {
 		if (listeners.isEmpty()) {
 			source.removeChangeListener(this);
 		}
-		log.verbose(this + " removing listener (total " + listeners.size() + "): " + l);
+		log.trace(this + " removing listener (total " + listeners.size() + "): " + l);
 	}
 	
 	

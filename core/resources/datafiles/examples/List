@@ -9,9 +9,33 @@
      
      <entry>
          <author>OpenRocket Development Team</author>
+         <name>Apocalypse</name>
+         <category>Example</category>
+         <downloadurl>Apocalypse with decals.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+     
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>Boosted Dart</name>
+         <category>Example</category>
+         <downloadurl>Boosted Dart.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+
+     <entry>
+         <author>OpenRocket Development Team</author>
          <name>Clustered Rocket</name>
          <category>Example</category>
          <downloadurl>Clustered rocket design.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+     
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>High Power Airstart</name>
+         <category>Example</category>
+         <downloadurl>High Power Airstart.ork</downloadurl>
          <weburl></weburl>
      </entry>
      
@@ -44,6 +68,14 @@
          <name>Simulation listeners</name>
          <category>Example</category>
          <downloadurl>Simulation listeners.ork</downloadurl>
+         <weburl></weburl>
+     </entry>
+
+     <entry>
+         <author>OpenRocket Development Team</author>
+         <name>TARC Payloader</name>
+         <category>Example</category>
+         <downloadurl>TARC Payloader.ork</downloadurl>
          <weburl></weburl>
      </entry>
 

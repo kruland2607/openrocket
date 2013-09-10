@@ -10,23 +10,21 @@ import java.awt.event.KeyListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 import net.sf.openrocket.document.OpenRocketDocument;
-import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.gui.util.Icons;
 import net.sf.openrocket.l10n.Translator;
-import net.sf.openrocket.logging.LogHelper;
-import net.sf.openrocket.rocketcomponent.Rocket;
 import net.sf.openrocket.simulation.customexpression.CustomExpression;
 import net.sf.openrocket.startup.Application;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dialog box for making a custom expression
@@ -37,7 +35,7 @@ import net.sf.openrocket.startup.Application;
 public class ExpressionBuilderDialog extends JDialog {
 
 	private static final Translator trans = Application.getTranslator();
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(ExpressionBuilderDialog.class);
 	
 	private static final ImageIcon GreenIcon = Icons.loadImageIcon("pix/spheres/green-16x16.png", "OK");
 	private static final ImageIcon RedIcon = Icons.loadImageIcon("pix/spheres/red-16x16.png", "Bad");
@@ -45,7 +43,9 @@ public class ExpressionBuilderDialog extends JDialog {
 	private CustomExpression expression;
 	private CustomExpression previousExpressionCopy;
 	
+	@SuppressWarnings("unused")
 	private final Window parentWindow;
+	@SuppressWarnings("unused")
 	private final OpenRocketDocument doc;
 	
 	// Define these check indicators to show if fields are OK
@@ -160,8 +160,8 @@ public class ExpressionBuilderDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				log.debug("Opening insert variable window");
-				Window parentWindow = SwingUtilities.getWindowAncestor(ExpressionBuilderDialog.this);
-				new VariableSelector(parentWindow, ExpressionBuilderDialog.this, doc).setVisible(true);
+				Window myParentWindow = SwingUtilities.getWindowAncestor(ExpressionBuilderDialog.this);
+				new VariableSelector(myParentWindow, ExpressionBuilderDialog.this, doc).setVisible(true);
 			}
 		});
 		
@@ -171,8 +171,8 @@ public class ExpressionBuilderDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				log.debug("Opening insert operator window");
-				Window parentWindow = SwingUtilities.getWindowAncestor(ExpressionBuilderDialog.this);
-				new OperatorSelector(parentWindow, ExpressionBuilderDialog.this).setVisible(true);
+				Window myParentWindow = SwingUtilities.getWindowAncestor(ExpressionBuilderDialog.this);
+				new OperatorSelector(myParentWindow, ExpressionBuilderDialog.this).setVisible(true);
 			}
 		});
 		

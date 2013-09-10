@@ -9,20 +9,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.zip.GZIPOutputStream;
 
 import net.sf.openrocket.aerodynamics.Warning;
 import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.document.StorageOptions;
 import net.sf.openrocket.file.RocketSaver;
-import net.sf.openrocket.logging.LogHelper;
+import net.sf.openrocket.rocketcomponent.DeploymentConfiguration.DeployEvent;
 import net.sf.openrocket.rocketcomponent.FinSet;
+import net.sf.openrocket.rocketcomponent.FlightConfigurableComponent;
 import net.sf.openrocket.rocketcomponent.MotorMount;
 import net.sf.openrocket.rocketcomponent.RecoveryDevice;
-import net.sf.openrocket.rocketcomponent.RecoveryDevice.DeployEvent;
 import net.sf.openrocket.rocketcomponent.Rocket;
 import net.sf.openrocket.rocketcomponent.RocketComponent;
+import net.sf.openrocket.rocketcomponent.Stage;
 import net.sf.openrocket.rocketcomponent.TubeCoupler;
 import net.sf.openrocket.simulation.FlightData;
 import net.sf.openrocket.simulation.FlightDataBranch;
@@ -30,16 +30,17 @@ import net.sf.openrocket.simulation.FlightDataType;
 import net.sf.openrocket.simulation.FlightEvent;
 import net.sf.openrocket.simulation.SimulationOptions;
 import net.sf.openrocket.simulation.customexpression.CustomExpression;
-import net.sf.openrocket.startup.Application;
 import net.sf.openrocket.util.BugException;
 import net.sf.openrocket.util.BuildProperties;
 import net.sf.openrocket.util.MathUtil;
 import net.sf.openrocket.util.Reflection;
 import net.sf.openrocket.util.TextUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class OpenRocketSaver extends RocketSaver {
-	private static final LogHelper log = Application.getLogger();
-	
+	private static final Logger log = LoggerFactory.getLogger(OpenRocketSaver.class);
 	
 	/**
 	 * Divisor used in converting an integer version to the point-represented version.
@@ -57,11 +58,8 @@ public class OpenRocketSaver extends RocketSaver {
 	
 	// Estimated storage used by different portions
 	// These have been hand-estimated from saved files
-	private static final int BYTES_PER_COMPONENT_UNCOMPRESSED = 590;
 	private static final int BYTES_PER_COMPONENT_COMPRESSED = 80;
-	private static final int BYTES_PER_SIMULATION_UNCOMPRESSED = 1000;
 	private static final int BYTES_PER_SIMULATION_COMPRESSED = 100;
-	private static final int BYTES_PER_DATAPOINT_UNCOMPRESSED = 350;
 	private static final int BYTES_PER_DATAPOINT_COMPRESSED = 100;
 	
 	
@@ -69,15 +67,9 @@ public class OpenRocketSaver extends RocketSaver {
 	private Writer dest;
 	
 	@Override
-	public void save(OutputStream output, OpenRocketDocument document, StorageOptions options)
-			throws IOException {
+	public void save(OutputStream output, OpenRocketDocument document, StorageOptions options) throws IOException {
 		
 		log.info("Saving .ork file");
-		
-		if (options.isCompressionEnabled()) {
-			log.debug("Enabling compression");
-			output = new GZIPOutputStream(output);
-		}
 		
 		dest = new BufferedWriter(new OutputStreamWriter(output, OPENROCKET_CHARSET));
 		
@@ -122,9 +114,6 @@ public class OpenRocketSaver extends RocketSaver {
 		
 		log.debug("Writing complete, flushing buffers");
 		dest.flush();
-		if (options.isCompressionEnabled()) {
-			((GZIPOutputStream) output).finish();
-		}
 	}
 	
 	/*
@@ -168,6 +157,8 @@ public class OpenRocketSaver extends RocketSaver {
 		
 		long size = 0;
 		
+		// TODO - estimate decals
+		
 		// Size per component
 		int componentCount = 0;
 		Rocket rocket = doc.getRocket();
@@ -177,17 +168,11 @@ public class OpenRocketSaver extends RocketSaver {
 			componentCount++;
 		}
 		
-		if (options.isCompressionEnabled())
-			size += componentCount * BYTES_PER_COMPONENT_COMPRESSED;
-		else
-			size += componentCount * BYTES_PER_COMPONENT_UNCOMPRESSED;
+		size += componentCount * BYTES_PER_COMPONENT_COMPRESSED;
 		
 		
 		// Size per simulation
-		if (options.isCompressionEnabled())
-			size += doc.getSimulationCount() * BYTES_PER_SIMULATION_COMPRESSED;
-		else
-			size += doc.getSimulationCount() * BYTES_PER_SIMULATION_UNCOMPRESSED;
+		size += doc.getSimulationCount() * BYTES_PER_SIMULATION_COMPRESSED;
 		
 		
 		// Size per flight data point
@@ -204,14 +189,22 @@ public class OpenRocketSaver extends RocketSaver {
 			}
 		}
 		
-		if (options.isCompressionEnabled())
-			size += pointCount * BYTES_PER_DATAPOINT_COMPRESSED;
-		else
-			size += pointCount * BYTES_PER_DATAPOINT_UNCOMPRESSED;
+		size += pointCount * BYTES_PER_DATAPOINT_COMPRESSED;
 		
 		return size;
 	}
 	
+	/**
+	 * Public test accessor method for calculateNecessaryFileVersion, used by unit tests.
+	 * 
+	 * @param document	the document to output.
+	 * @param opts		the storage options.
+	 * @return			the integer file version to use.
+	 */
+	public int testAccessor_calculateNecessaryFileVersion(OpenRocketDocument document, StorageOptions opts) {
+		// TODO: should check for test context here and fail if not running junit
+		return calculateNecessaryFileVersion(document, opts);
+	}
 	
 	/**
 	 * Determine which file version is required in order to store all the features of the
@@ -224,6 +217,9 @@ public class OpenRocketSaver extends RocketSaver {
 	 */
 	private int calculateNecessaryFileVersion(OpenRocketDocument document, StorageOptions opts) {
 		/*
+		 * File version 1.6 is required for:
+		 *  - saving files using appearances and textures, flight configurations.
+		 *  
 		 * File version 1.5 is requires for:
 		 *  - saving designs using ComponentPrests
 		 *  - recovery device deployment on lower stage separation
@@ -240,6 +236,41 @@ public class OpenRocketSaver extends RocketSaver {
 		 * Otherwise use version 1.0.
 		 */
 		
+		/////////////////
+		// Version 1.6 // 
+		/////////////////
+		
+		// Search the rocket for any Appearances or non-motor flight configurations (version 1.6)
+		for (RocketComponent c : document.getRocket()) {
+			if (c.getAppearance() != null) {
+				return FILE_VERSION_DIVISOR + 6;
+			}
+			if (c instanceof FlightConfigurableComponent) {
+				if (c instanceof MotorMount) {
+					MotorMount mmt = (MotorMount) c;
+					if (mmt.getIgnitionConfiguration().size() > 0) {
+						return FILE_VERSION_DIVISOR + 6;
+					}
+				}
+				if (c instanceof RecoveryDevice) {
+					RecoveryDevice recovery = (RecoveryDevice) c;
+					if (recovery.getDeploymentConfiguration().size() > 0) {
+						return FILE_VERSION_DIVISOR + 6;
+					}
+				}
+				if (c instanceof Stage) {
+					Stage stage = (Stage) c;
+					if (stage.getStageSeparationConfiguration().size() > 0) {
+						return FILE_VERSION_DIVISOR + 6;
+					}
+				}
+			}
+		}
+		
+		/////////////////
+		// Version 1.5 // 
+		/////////////////
+		
 		// Search the rocket for any ComponentPresets (version 1.5)
 		for (RocketComponent c : document.getRocket()) {
 			if (c.getPresetComponent() != null) {
@@ -250,16 +281,20 @@ public class OpenRocketSaver extends RocketSaver {
 		// Search for recovery device deployment type LOWER_STAGE_SEPARATION (version 1.5)
 		for (RocketComponent c : document.getRocket()) {
 			if (c instanceof RecoveryDevice) {
-				if (((RecoveryDevice) c).getDeployEvent() == DeployEvent.LOWER_STAGE_SEPARATION) {
+				if (((RecoveryDevice) c).getDeploymentConfiguration().getDefault().getDeployEvent() == DeployEvent.LOWER_STAGE_SEPARATION) {
 					return FILE_VERSION_DIVISOR + 5;
 				}
 			}
 		}
 		
-		// Check for custom expressions
+		// Check for custom expressions (version 1.5)
 		if (!document.getCustomExpressions().isEmpty()) {
 			return FILE_VERSION_DIVISOR + 5;
 		}
+		
+		/////////////////
+		// Version 1.4 // 
+		/////////////////
 		
 		// Check if design has simulations defined (version 1.4)
 		if (document.getSimulationCount() > 0) {
@@ -272,14 +307,30 @@ public class OpenRocketSaver extends RocketSaver {
 				continue;
 			
 			MotorMount mount = (MotorMount) c;
-			for (String id : document.getRocket().getMotorConfigurationIDs()) {
+			for (String id : document.getRocket().getFlightConfigurationIDs()) {
 				if (mount.getMotor(id) != null) {
 					return FILE_VERSION_DIVISOR + 4;
 				}
 			}
 		}
 		
-		// Check for fin tabs (version 1.1)
+		/////////////////
+		// Version 1.3 // 
+		/////////////////
+		
+		// no version 1.3 file type exists
+		
+		/////////////////
+		// Version 1.2 // 
+		/////////////////
+		
+		// no version 1.2 file type exists
+		
+		/////////////////
+		// Version 1.1 // 
+		/////////////////
+		
+		// Check for fin tabs or tube coupler children (version 1.1)
 		for (RocketComponent c : document.getRocket()) {
 			// Check for fin tabs
 			if (c instanceof FinSet) {
@@ -297,6 +348,10 @@ public class OpenRocketSaver extends RocketSaver {
 				}
 			}
 		}
+		
+		/////////////////
+		// Version 1.0 // 
+		/////////////////
 		
 		// Default (version 1.0)
 		return FILE_VERSION_DIVISOR + 0;
@@ -364,7 +419,7 @@ public class OpenRocketSaver extends RocketSaver {
 		writeln("<simulation status=\"" + enumToXMLName(simulation.getStatus()) + "\">");
 		indent++;
 		
-		writeln("<name>" + escapeXML(simulation.getName()) + "</name>");
+		writeln("<name>" + TextUtil.escapeXML(simulation.getName()) + "</name>");
 		// TODO: MEDIUM: Other simulators/calculators
 		
 		writeln("<simulator>RK4Simulator</simulator>");
@@ -402,7 +457,7 @@ public class OpenRocketSaver extends RocketSaver {
 		
 		
 		for (String s : simulation.getSimulationListeners()) {
-			writeElement("listener", escapeXML(s));
+			writeElement("listener", TextUtil.escapeXML(s));
 		}
 		
 		// Write basic simulation data
@@ -433,7 +488,7 @@ public class OpenRocketSaver extends RocketSaver {
 			indent++;
 			
 			for (Warning w : data.getWarningSet()) {
-				writeElement("warning", escapeXML(w.toString()));
+				writeElement("warning", TextUtil.escapeXML(w.toString()));
 			}
 			
 			// Check whether to store data
@@ -455,7 +510,6 @@ public class OpenRocketSaver extends RocketSaver {
 		writeln("</simulation>");
 		
 	}
-	
 	
 	
 	private void saveFlightDataBranch(FlightDataBranch branch, double timeSkip)
@@ -481,7 +535,7 @@ public class OpenRocketSaver extends RocketSaver {
 		// Build the <databranch> tag
 		StringBuilder sb = new StringBuilder();
 		sb.append("<databranch name=\"");
-		sb.append(escapeXML(branch.getBranchName()));
+		sb.append(TextUtil.escapeXML(branch.getBranchName()));
 		
 		// Kevins version where typekeys are used
 		/*
@@ -497,7 +551,7 @@ public class OpenRocketSaver extends RocketSaver {
 		for (int i = 0; i < types.length; i++) {
 			if (i > 0)
 				sb.append(",");
-			sb.append(escapeXML(types[i].getName()));
+			sb.append(TextUtil.escapeXML(types[i].getName()));
 		}
 		sb.append("\">");
 		writeln(sb.toString());

@@ -2,7 +2,6 @@ package net.sf.openrocket.l10n;
 
 import java.util.MissingResourceException;
 
-import net.sf.openrocket.logging.TraceException;
 import net.sf.openrocket.util.BugException;
 
 /**
@@ -17,7 +16,20 @@ public class ClassBasedTranslator implements Translator {
 	
 	
 	private final Translator translator;
-	private final String className;
+	private String className;
+	private int levels;
+	
+	
+	/**
+	 * Construct a translator by obtaining the base class name from the stack
+	 * on the first execution of the get() method.
+	 * 
+	 * @param translator	the translator from which to obtain the translations.
+	 */
+	public ClassBasedTranslator(Translator translator, int levels) {
+		this.translator = translator;
+		this.levels = levels;
+	}
 	
 	/**
 	 * Construct a translator using a specified class name.
@@ -30,20 +42,14 @@ public class ClassBasedTranslator implements Translator {
 		this.className = className;
 	}
 	
-	/**
-	 * Construct a translator by obtaining the base class name from the stack.
-	 * 
-	 * @param translator	the translator from which to obtain the translations.
-	 * @param levels		the number of levels to move upwards in the stack from the point where this method is called.
-	 */
-	public ClassBasedTranslator(Translator translator, int levels) {
-		this(translator, getStackClass(levels));
-	}
-	
 	
 	
 	@Override
 	public String get(String key) {
+		if (className == null) {
+			className = findClassName();
+		}
+		
 		String classKey = className + "." + key;
 		
 		try {
@@ -63,7 +69,6 @@ public class ClassBasedTranslator implements Translator {
 	}
 	
 	
-	
 	@Override
 	public String get(String base, String text) {
 		return translator.get(base, text);
@@ -76,11 +81,10 @@ public class ClassBasedTranslator implements Translator {
 	
 	
 	
-	
-	private static String getStackClass(int levels) {
-		TraceException trace = new TraceException();
+	private String findClassName() {
+		Throwable trace = new Throwable();
 		StackTraceElement stack[] = trace.getStackTrace();
-		final int index = levels + 2;
+		final int index = 2 + levels;
 		if (stack.length <= index) {
 			throw new BugException("Stack trace is too short, length=" + stack.length + ", expected=" + index, trace);
 		}
@@ -91,9 +95,14 @@ public class ClassBasedTranslator implements Translator {
 		if (pos >= 0) {
 			cn = cn.substring(pos + 1);
 		}
+		
+		pos = cn.indexOf('$');
+		if (pos >= 0) {
+			cn = cn.substring(0, pos);
+		}
+		
 		return cn;
 	}
-	
 	
 	
 	

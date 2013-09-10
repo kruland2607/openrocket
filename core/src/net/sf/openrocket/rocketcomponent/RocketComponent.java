@@ -1,30 +1,36 @@
 package net.sf.openrocket.rocketcomponent;
 
 import java.util.Collection;
-import java.util.EventListener;
+import java.util.EventObject;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import net.sf.openrocket.appearance.Appearance;
+import net.sf.openrocket.appearance.Decal;
 import net.sf.openrocket.l10n.Translator;
-import net.sf.openrocket.logging.LogHelper;
 import net.sf.openrocket.preset.ComponentPreset;
 import net.sf.openrocket.startup.Application;
 import net.sf.openrocket.util.ArrayList;
 import net.sf.openrocket.util.BugException;
 import net.sf.openrocket.util.ChangeSource;
 import net.sf.openrocket.util.Color;
+import net.sf.openrocket.util.ComponentChangeAdapter;
 import net.sf.openrocket.util.Coordinate;
 import net.sf.openrocket.util.Invalidator;
 import net.sf.openrocket.util.LineStyle;
 import net.sf.openrocket.util.MathUtil;
 import net.sf.openrocket.util.SafetyMutex;
 import net.sf.openrocket.util.SimpleStack;
+import net.sf.openrocket.util.StateChangeListener;
 import net.sf.openrocket.util.UniqueID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public abstract class RocketComponent implements ChangeSource, Cloneable, Iterable<RocketComponent> {
-	private static final LogHelper log = Application.getLogger();
+
+public abstract class RocketComponent implements ChangeSource, Cloneable, Iterable<RocketComponent>, Visitable<RocketComponentVisitor, RocketComponent> {
+	private static final Logger log = LoggerFactory.getLogger(RocketComponent.class);
 	private static final Translator trans = Application.getTranslator();
 	
 	/*
@@ -124,6 +130,9 @@ public abstract class RocketComponent implements ChangeSource, Cloneable, Iterab
 	
 	// Preset component this component is based upon
 	private ComponentPreset presetComponent = null;
+	
+	// The realistic appearance of this component
+	private Appearance appearance = null;
 	
 	
 	/**
@@ -402,6 +411,41 @@ public abstract class RocketComponent implements ChangeSource, Cloneable, Iterab
 	
 	
 	////////// Common parameter setting/getting //////////
+	
+	/**
+	 * Get the realistic appearance of this component.
+	 *  <code>null</code> = use the default for this material
+	 *
+	 * @return The component's realistic appearance, or <code>null</code>
+	 */
+	public Appearance getAppearance() {
+		return appearance;
+	}
+	
+	/**
+	 * Set the realistic appearance of this component.
+	 * Use <code>null</code> for default.
+	 *
+	 * @param appearance
+	 */
+	public void setAppearance(Appearance appearance) {
+		this.appearance = appearance;
+		if (this.appearance != null) {
+			Decal d = this.appearance.getTexture();
+			if (d != null) {
+				d.getImage().addChangeListener(new StateChangeListener() {
+					
+					@Override
+					public void stateChanged(EventObject e) {
+						fireComponentChangeEvent(ComponentChangeEvent.TEXTURE_CHANGE);
+					}
+					
+				});
+			}
+		}
+		// CHECK - should this be a TEXTURE_CHANGE and not NONFUNCTIONAL_CHANGE?
+		fireComponentChangeEvent(ComponentChangeEvent.NONFUNCTIONAL_CHANGE);
+	}
 	
 	/**
 	 * Return the color of the object to use in 2D figures, or <code>null</code>
@@ -1491,9 +1535,8 @@ public abstract class RocketComponent implements ChangeSource, Cloneable, Iterab
 	 * @throws IllegalStateException - if the root component is not a <code>Rocket</code>
 	 */
 	@Override
-	public void addChangeListener(EventListener l) {
-		checkState();
-		getRocket().addChangeListener(l);
+	public final void addChangeListener(StateChangeListener l) {
+		addComponentChangeListener(new ComponentChangeAdapter(l));
 	}
 	
 	/**
@@ -1505,10 +1548,8 @@ public abstract class RocketComponent implements ChangeSource, Cloneable, Iterab
 	 * @param l  Listener to remove
 	 */
 	@Override
-	public void removeChangeListener(EventListener l) {
-		if (this.parent != null) {
-			getRoot().removeChangeListener(l);
-		}
+	public final void removeChangeListener(StateChangeListener l) {
+		removeComponentChangeListener(new ComponentChangeAdapter(l));
 	}
 	
 	
@@ -1527,7 +1568,6 @@ public abstract class RocketComponent implements ChangeSource, Cloneable, Iterab
 		checkState();
 		if (parent == null) {
 			/* Ignore if root invalid. */
-			log.debug("Attempted firing event " + e + " with root " + this.getComponentName() + ", ignoring event");
 			return;
 		}
 		getRoot().fireComponentChangeEvent(e);
@@ -1691,7 +1731,11 @@ public abstract class RocketComponent implements ChangeSource, Cloneable, Iterab
 		return id.hashCode();
 	}
 	
-	
+	///////////// Visitor pattern implementation
+	@Override
+	public void accept(RocketComponentVisitor visitor) {
+		visitor.visit(this);
+	}
 	
 	////////////  Helper methods for subclasses
 	

@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +35,8 @@ import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -43,8 +46,7 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
 import net.miginfocom.swing.MigLayout;
-import net.sf.openrocket.database.ThrustCurveMotorSet;
-import net.sf.openrocket.database.ThrustCurveMotorSetDatabase;
+import net.sf.openrocket.database.motor.ThrustCurveMotorSet;
 import net.sf.openrocket.gui.components.StyledLabel;
 import net.sf.openrocket.gui.components.StyledLabel.Style;
 import net.sf.openrocket.gui.dialogs.motor.CloseableDialog;
@@ -53,7 +55,7 @@ import net.sf.openrocket.gui.util.GUIUtil;
 import net.sf.openrocket.gui.util.Icons;
 import net.sf.openrocket.gui.util.SwingPreferences;
 import net.sf.openrocket.l10n.Translator;
-import net.sf.openrocket.logging.LogHelper;
+import net.sf.openrocket.logging.Markers;
 import net.sf.openrocket.motor.Motor;
 import net.sf.openrocket.motor.ThrustCurveMotor;
 import net.sf.openrocket.startup.Application;
@@ -71,9 +73,11 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ThrustCurveMotorSelectionPanel extends JPanel implements MotorSelector {
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(ThrustCurveMotorSelectionPanel.class);
 	private static final Translator trans = Application.getTranslator();
 	
 	private static final double MOTOR_SIMILARITY_THRESHOLD = 0.95;
@@ -163,8 +167,7 @@ public class ThrustCurveMotorSelectionPanel extends JPanel implements MotorSelec
 		
 		// Construct the database (adding the current motor if not in the db already)
 		List<ThrustCurveMotorSet> db;
-		// TODO - ugly blind cast.
-		db = ((ThrustCurveMotorSetDatabase) Application.getMotorSetDatabase()).getMotorSets();
+		db = Application.getThrustCurveMotorSetDatabase().getMotorSets();
 		
 		// If current motor is not found in db, add a new ThrustCurveMotorSet containing it
 		if (current != null) {
@@ -262,6 +265,15 @@ public class ThrustCurveMotorSelectionPanel extends JPanel implements MotorSelec
 			table.getColumnModel().getColumn(i).setPreferredWidth(column.getWidth());
 		}
 		table.setRowSorter(sorter);
+		// force initial sort order to by diameter, total impulse, manufacturer
+		{
+			RowSorter.SortKey[] sortKeys = {
+					new RowSorter.SortKey(ThrustCurveMotorColumns.DIAMETER.ordinal(), SortOrder.ASCENDING),
+					new RowSorter.SortKey(ThrustCurveMotorColumns.TOTAL_IMPULSE.ordinal(), SortOrder.ASCENDING),
+					new RowSorter.SortKey(ThrustCurveMotorColumns.MANUFACTURER.ordinal(), SortOrder.ASCENDING)
+			};
+			sorter.setSortKeys(Arrays.asList(sortKeys));
+		}
 		
 		// Set selection and double-click listeners
 		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -271,12 +283,12 @@ public class ThrustCurveMotorSelectionPanel extends JPanel implements MotorSelec
 				if (row >= 0) {
 					row = table.convertRowIndexToModel(row);
 					ThrustCurveMotorSet motorSet = model.getMotorSet(row);
-					log.user("Selected table row " + row + ": " + motorSet);
+					log.info(Markers.USER_MARKER, "Selected table row " + row + ": " + motorSet);
 					if (motorSet != selectedMotorSet) {
 						select(selectMotor(motorSet));
 					}
 				} else {
-					log.user("Selected table row " + row + ", nothing selected");
+					log.info(Markers.USER_MARKER, "Selected table row " + row + ", nothing selected");
 				}
 			}
 		});
@@ -558,7 +570,6 @@ public class ThrustCurveMotorSelectionPanel extends JPanel implements MotorSelec
 		
 	}
 	
-	
 	@Override
 	public Motor getSelectedMotor() {
 		return selectedMotor;
@@ -715,7 +726,7 @@ public class ThrustCurveMotorSelectionPanel extends JPanel implements MotorSelec
 			ThrustCurveMotor m = motors.get(i);
 			
 			//// Thrust
-			XYSeries series = new XYSeries(trans.get("TCMotorSelPan.title.Thrust"));
+			XYSeries series = new XYSeries(trans.get("TCMotorSelPan.title.Thrust") + " (" + i + ")");
 			double[] time = m.getTimePoints();
 			double[] thrust = m.getThrustPoints();
 			

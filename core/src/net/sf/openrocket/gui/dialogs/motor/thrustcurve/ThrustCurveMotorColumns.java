@@ -3,7 +3,7 @@ package net.sf.openrocket.gui.dialogs.motor.thrustcurve;
 import java.text.Collator;
 import java.util.Comparator;
 
-import net.sf.openrocket.database.ThrustCurveMotorSet;
+import net.sf.openrocket.database.motor.ThrustCurveMotorSet;
 import net.sf.openrocket.l10n.Translator;
 import net.sf.openrocket.motor.DesignationComparator;
 import net.sf.openrocket.motor.ThrustCurveMotor;
@@ -40,6 +40,22 @@ enum ThrustCurveMotorColumns {
 		@Override
 		public Comparator<?> getComparator() {
 			return new DesignationComparator();
+		}
+	},
+	//// TotalImpulse
+	TOTAL_IMPULSE("TCurveMotorCol.TOTAL_IMPULSE") {
+		@Override
+		public Object getValue(ThrustCurveMotorSet m) {
+			return m.getTotalImpuse();
+		}
+		
+		@Override
+		public Comparator<?> getComparator() {
+			return new Comparator<Long>() {
+				public int compare(Long o1, Long o2) {
+					return o1.compareTo(o2);
+				}
+			};
 		}
 	},
 	//// Type
@@ -79,7 +95,7 @@ enum ThrustCurveMotorColumns {
 		}
 	};
 	
-
+	
 	private final String title;
 	private final int width;
 	private static final Translator trans = Application.getTranslator();

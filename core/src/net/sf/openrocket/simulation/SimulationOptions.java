@@ -5,10 +5,9 @@ import java.util.EventListener;
 import java.util.EventObject;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import net.sf.openrocket.aerodynamics.BarrowmanCalculator;
-import net.sf.openrocket.logging.LogHelper;
+import net.sf.openrocket.formatting.MotorDescriptionSubstitutor;
 import net.sf.openrocket.masscalc.BasicMassCalculator;
 import net.sf.openrocket.models.atmosphere.AtmosphericModel;
 import net.sf.openrocket.models.atmosphere.ExtendedISAModel;
@@ -25,6 +24,9 @@ import net.sf.openrocket.util.StateChangeListener;
 import net.sf.openrocket.util.Utils;
 import net.sf.openrocket.util.WorldCoordinate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A class holding simulation options in basic parameter form and which functions
  * as a ChangeSource.  A SimulationConditions instance is generated from this class
@@ -34,7 +36,7 @@ import net.sf.openrocket.util.WorldCoordinate;
  */
 public class SimulationOptions implements ChangeSource, Cloneable {
 	
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(SimulationOptions.class);
 	
 	public static final double MAX_LAUNCH_ROD_ANGLE = Math.PI / 3;
 	
@@ -43,16 +45,16 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	 */
 	private static final AtmosphericModel ISA_ATMOSPHERIC_MODEL = new ExtendedISAModel();
 	
-
+	
 	private final Rocket rocket;
 	private String motorID = null;
 	
-
+	
 	/*
 	 * NOTE:  When adding/modifying parameters, they must also be added to the
 	 * equals and copyFrom methods!!
 	 */
-
+	
 	// TODO: HIGH: Fetch default values from Prefs!
 	
 	private double launchRodLength = 1;
@@ -63,11 +65,11 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	/** Launch rod direction, 0 = upwind, PI = downwind. */
 	private double launchRodDirection = 0;
 	
-
+	
 	private double windAverage = 2.0;
 	private double windTurbulence = 0.1;
 	
-
+	
 	/*
 	 * SimulationOptions maintains the launch site parameters as separate double values,
 	 * and converts them into a WorldCoordinate when converting to SimulationConditions.
@@ -81,7 +83,7 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	private double launchTemperature = ExtendedISAModel.STANDARD_TEMPERATURE;
 	private double launchPressure = ExtendedISAModel.STANDARD_PRESSURE;
 	
-
+	
 	private double timeStep = RK4SimulationStepper.RECOMMENDED_TIME_STEP;
 	private double maximumAngle = RK4SimulationStepper.RECOMMENDED_ANGLE_STEP;
 	
@@ -89,11 +91,11 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	
 	private boolean calculateExtras = true;
 	
-
+	
 	private List<EventListener> listeners = new ArrayList<EventListener>();
 	
 	
-
+	
 	public SimulationOptions(Rocket rocket) {
 		this.rocket = rocket;
 	}
@@ -116,7 +118,7 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	public void setMotorConfigurationID(String id) {
 		if (id != null)
 			id = id.intern();
-		if (!rocket.isMotorConfigurationID(id))
+		if (!rocket.isFlightConfigurationID(id))
 			id = null;
 		if (id == motorID)
 			return;
@@ -163,7 +165,7 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	
-
+	
 	public double getWindSpeedAverage() {
 		return windAverage;
 	}
@@ -209,9 +211,9 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	
-
-
-
+	
+	
+	
 	public double getLaunchAltitude() {
 		return launchAltitude;
 	}
@@ -281,7 +283,7 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	
-
+	
 	public void setLaunchTemperature(double launchTemperature) {
 		if (MathUtil.equals(this.launchTemperature, launchTemperature))
 			return;
@@ -290,13 +292,13 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	
-
+	
 	public double getLaunchPressure() {
 		return launchPressure;
 	}
 	
 	
-
+	
 	public void setLaunchPressure(double launchPressure) {
 		if (MathUtil.equals(this.launchPressure, launchPressure))
 			return;
@@ -343,13 +345,13 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	
-
+	
 	public boolean getCalculateExtras() {
 		return calculateExtras;
 	}
 	
 	
-
+	
 	public void setCalculateExtras(boolean calculateExtras) {
 		if (this.calculateExtras == calculateExtras)
 			return;
@@ -358,7 +360,7 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	
-
+	
 	public int getRandomSeed() {
 		return randomSeed;
 	}
@@ -385,7 +387,7 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	
-
+	
 	@Override
 	public SimulationOptions clone() {
 		try {
@@ -407,18 +409,26 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 		} else {
 			
 			if (src.rocket.hasMotors(src.motorID)) {
-				// Try to find a matching motor ID
-				String motorDesc = src.rocket.getMotorConfigurationDescription(src.motorID);
-				String matchID = null;
-				
-				for (String id : this.rocket.getMotorConfigurationIDs()) {
-					if (motorDesc.equals(this.rocket.getMotorConfigurationDescription(id))) {
-						matchID = id;
-						break;
+				// First check for exact match:
+				if (this.rocket.isFlightConfigurationID(src.motorID)) {
+					this.motorID = src.motorID;
+				} else {
+					// Try to find a closely matching motor ID
+					MotorDescriptionSubstitutor formatter = Application.getInjector().getInstance(MotorDescriptionSubstitutor.class);
+					
+					String motorDesc = formatter.getMotorConfigurationDescription(src.rocket, src.motorID);
+					String matchID = null;
+					
+					for (String id : this.rocket.getFlightConfigurationIDs()) {
+						String motorDesc2 = formatter.getMotorConfigurationDescription(this.rocket, id);
+						if (motorDesc.equals(motorDesc2)) {
+							matchID = id;
+							break;
+						}
 					}
+					
+					this.motorID = matchID;
 				}
-				
-				this.motorID = matchID;
 			} else {
 				this.motorID = null;
 			}
@@ -442,8 +452,73 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 		fireChangeEvent();
 	}
 	
+	public void copyConditionsFrom(SimulationOptions src) {
+		// Be a little smart about triggering the change event.
+		// only do it if one of the "important" (user specified) parameters has really changed.
+		boolean isChanged = false;
+		if (this.launchAltitude != src.launchAltitude) {
+			isChanged = true;
+			this.launchAltitude = src.launchAltitude;
+		}
+		if (this.launchLatitude != src.launchLatitude) {
+			isChanged = true;
+			this.launchLatitude = src.launchLatitude;
+		}
+		if (this.launchLongitude != src.launchLongitude) {
+			isChanged = true;
+			this.launchLongitude = src.launchLongitude;
+		}
+		if (this.launchPressure != src.launchPressure) {
+			isChanged = true;
+			this.launchPressure = src.launchPressure;
+		}
+		if (this.launchRodAngle != src.launchRodAngle) {
+			isChanged = true;
+			this.launchRodAngle = src.launchRodAngle;
+		}
+		if (this.launchRodDirection != src.launchRodDirection) {
+			isChanged = true;
+			this.launchRodDirection = src.launchRodDirection;
+		}
+		if (this.launchRodLength != src.launchRodLength) {
+			isChanged = true;
+			this.launchRodLength = src.launchRodLength;
+		}
+		if (this.launchTemperature != src.launchTemperature) {
+			isChanged = true;
+			this.launchTemperature = src.launchTemperature;
+		}
+		if (this.maximumAngle != src.maximumAngle) {
+			isChanged = true;
+			this.maximumAngle = src.maximumAngle;
+		}
+		this.maximumAngle = src.maximumAngle;
+		if (this.timeStep != src.timeStep) {
+			isChanged = true;
+			this.timeStep = src.timeStep;
+		}
+		if (this.windAverage != src.windAverage) {
+			isChanged = true;
+			this.windAverage = src.windAverage;
+		}
+		if (this.windTurbulence != src.windTurbulence) {
+			isChanged = true;
+			this.windTurbulence = src.windTurbulence;
+		}
+		if (this.calculateExtras != src.calculateExtras) {
+			isChanged = true;
+			this.calculateExtras = src.calculateExtras;
+		}
+		
+		if (isChanged) {
+			// Only copy the randomSeed if something else has changed.
+			// Honestly, I don't really see a need for that.
+			this.randomSeed = src.randomSeed;
+			fireChangeEvent();
+		}
+	}
 	
-
+	
 	/**
 	 * Compares whether the two simulation conditions are equal.  The two are considered
 	 * equal if the rocket, motor id and all variables are equal.
@@ -481,12 +556,12 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 	}
 	
 	@Override
-	public void addChangeListener(EventListener listener) {
+	public void addChangeListener(StateChangeListener listener) {
 		listeners.add(listener);
 	}
 	
 	@Override
-	public void removeChangeListener(EventListener listener) {
+	public void removeChangeListener(StateChangeListener listener) {
 		listeners.remove(listener);
 	}
 	
@@ -497,8 +572,8 @@ public class SimulationOptions implements ChangeSource, Cloneable {
 		// Copy the list before iterating to prevent concurrent modification exceptions.
 		EventListener[] list = listeners.toArray(new EventListener[0]);
 		for (EventListener l : list) {
-			if ( l instanceof StateChangeListener ) {
-				((StateChangeListener)l).stateChanged(event);
+			if (l instanceof StateChangeListener) {
+				((StateChangeListener) l).stateChanged(event);
 			}
 		}
 	}

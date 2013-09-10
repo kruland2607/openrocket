@@ -80,25 +80,44 @@ header("Content-type: text/plain");
 $version = $_GET["version"];
 $updates = "";
 
-$unstable = "12.09.1";
+$unstable = "13.09";
 $stable = "1.0.0";
 
 
-if (preg_match("/^12.09$/", $version)) {
+if (preg_match("/^13.05$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
+    "4: Updated 3D libraries\n" .
+    "4: Bug fixes\n" .
+    "";
+} else if (preg_match("/^12.09.1$/", $version)) {
+  $updates = "Version: " . $unstable . "\n" .
+    "10: Realistic 3D rendering\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
+    "5: New translations\n" .
+    "4: Bug fixes\n" .
+    "";
+} else if (preg_match("/^12.09$/", $version)) {
+  $updates = "Version: " . $unstable . "\n" .
+    "10: Realistic 3D rendering\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
+    "5: New translations\n" .
     "4: Bug fixes\n" .
     "";
 } else if (preg_match("/^12.03$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
-    "5: Fractional inch unit\n" .
     "4: Printing centering rings\n" .
-    "4: Translations to Czech and Polish\n" .
     "";
 } else if (preg_match("/^1\.1\.9$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "5: Configurable stage separation\n" .
@@ -108,6 +127,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^1\.1\.8$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "6: Additional template printing\n" .
@@ -120,6 +141,9 @@ if (preg_match("/^12.09$/", $version)) {
     "";
 } else if (preg_match("/^1\.1\.7$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
+    "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "8: Writing RKT files\n" .
     "6: Additional template printing\n" .
     "5: Geodetic computations\n" .
@@ -132,6 +156,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^1\.1\.6$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "8: Automatic rocket design optimization\n" .
@@ -141,6 +167,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^1\.1\.5$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "8: Automatic rocket design optimization\n" .
@@ -153,6 +181,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^1\.1\.4$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "8: Automatic rocket design optimization\n" .
@@ -163,6 +193,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^1\.1\.3$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "8: Automatic rocket design optimization\n" .
@@ -174,6 +206,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^1\.1\.[12]$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "8: Automatic rocket design optimization\n" .
@@ -186,6 +220,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^1\.1\.0$/", $version)) {
   $updates = "Version: " . $unstable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "8: Automatic rocket design optimization\n" .
@@ -199,6 +235,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^0\.9\.6/", $version)) {
   $updates = "Version: " . $stable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "6: Hundreds of new thrustcurves\n" .
@@ -207,6 +245,8 @@ if (preg_match("/^12.09$/", $version)) {
 } else if (preg_match("/^0\.9\.[45]/", $version)) {
   $updates = "Version: " . $stable . "\n" .
     "10: 3D design view\n" .
+    "9: Flight configurations\n" .
+    "8: Lower stage simulation\n" .
     "9: Component presets\n" .
     "8: Writing RKT files\n" .
     "7: Hundreds of new thrustcurves\n" .

@@ -3,11 +3,13 @@ package net.sf.openrocket.simulation;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.sf.openrocket.aerodynamics.AerodynamicForces;
 import net.sf.openrocket.aerodynamics.FlightConditions;
 import net.sf.openrocket.aerodynamics.WarningSet;
 import net.sf.openrocket.l10n.Translator;
-import net.sf.openrocket.logging.LogHelper;
 import net.sf.openrocket.models.atmosphere.AtmosphericConditions;
 import net.sf.openrocket.simulation.exception.SimulationCalculationException;
 import net.sf.openrocket.simulation.exception.SimulationException;
@@ -22,7 +24,7 @@ import net.sf.openrocket.util.WorldCoordinate;
 
 public class RK4SimulationStepper extends AbstractSimulationStepper {
 	
-	private static final LogHelper log = Application.getLogger();
+	private static final Logger log = LoggerFactory.getLogger(RK4SimulationStepper.class);
 	private static final Translator trans = Application.getTranslator();
 	
 
@@ -66,9 +68,9 @@ public class RK4SimulationStepper extends AbstractSimulationStepper {
 	@Override
 	public RK4SimulationStatus initialize(SimulationStatus original) {
 		
-		RK4SimulationStatus status = new RK4SimulationStatus();
-		
-		status.copyFrom(original);
+		RK4SimulationStatus status = new RK4SimulationStatus(original);
+		// Copy the existing warnings
+		status.setWarnings( original.getWarnings() );
 		
 		SimulationConditions sim = original.getSimulationConditions();
 		
@@ -138,8 +140,9 @@ public class RK4SimulationStepper extends AbstractSimulationStepper {
 		 */
 		double[] dt = new double[8];
 		Arrays.fill(dt, Double.MAX_VALUE);
-		
-		dt[0] = status.getSimulationConditions().getTimeStep();
+
+		// If the user selected a really small timestep, use MIN_TIME_STEP instead.
+		dt[0] = MathUtil.max(status.getSimulationConditions().getTimeStep(),MIN_TIME_STEP);
 		dt[1] = maxTimeStep;
 		dt[2] = status.getSimulationConditions().getMaximumAngleStep() / store.lateralPitchRate;
 		dt[3] = Math.abs(MAX_ROLL_STEP_ANGLE / store.flightConditions.getRollRate());
@@ -159,14 +162,14 @@ public class RK4SimulationStepper extends AbstractSimulationStepper {
 				limitingValue = i;
 			}
 		}
-		
+
 		double minTimeStep = status.getSimulationConditions().getTimeStep() / 20;
 		if (store.timestep < minTimeStep) {
-			log.verbose("Too small time step " + store.timestep + " (limiting factor " + limitingValue + "), using " +
+			log.trace("Too small time step " + store.timestep + " (limiting factor " + limitingValue + "), using " +
 					minTimeStep + " instead.");
 			store.timestep = minTimeStep;
 		} else {
-			log.verbose("Selected time step " + store.timestep + " (limiting factor " + limitingValue + ")");
+			log.trace("Selected time step " + store.timestep + " (limiting factor " + limitingValue + ")");
 		}
 		checkNaN(store.timestep);
 		
@@ -190,7 +193,7 @@ public class RK4SimulationStepper extends AbstractSimulationStepper {
 						", recomputing k1 parameters");
 				k1 = computeParameters(status, store);
 			} else {
-				log.verbose("Thrust estimate differs from correct value by " +
+				log.trace("Thrust estimate differs from correct value by " +
 						(Math.rint(1000 * (thrustDiff + 0.000001) / thrustEstimate) / 10.0) + "%," +
 						" estimate=" + thrustEstimate +
 						" correct=" + store.thrustForce +
