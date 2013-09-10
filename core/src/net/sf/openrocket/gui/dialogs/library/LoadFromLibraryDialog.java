@@ -52,7 +52,7 @@ public class LoadFromLibraryDialog extends JDialog {
 		JLabel filterLabel = new JLabel(trans.get("host.label"));
 		sub.add(filterLabel, "gapright para");
 		
-		JComboBox<String> hosts = new JComboBox<String>(new RemoteHostComboModel());
+		JComboBox hosts = new JComboBox(new RemoteHostComboModel());
 		hosts.setEditable(true);
 		hosts.addActionListener(new ActionListener() {
 			

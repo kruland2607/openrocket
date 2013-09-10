@@ -11,10 +11,10 @@ import net.sf.openrocket.library.RemoteHostRegistry;
 import net.sf.openrocket.startup.Application;
 
 
-public class RemoteHostComboModel extends DefaultComboBoxModel<String> {
-
+public class RemoteHostComboModel extends DefaultComboBoxModel {
+	
 	private static final Translator trans = Application.getTranslator();
-
+	
 	private static String[] hosts;
 	
 	static {
@@ -22,21 +22,21 @@ public class RemoteHostComboModel extends DefaultComboBoxModel<String> {
 		hosts = new String[hostsList.size() + 1];
 		hosts[0] = trans.get("LoadFromLibraryDialog.select");
 		int i = 1;
-		for( RemoteHost host : hostsList ) {
+		for (RemoteHost host : hostsList) {
 			
 			hosts[i++] = host.getDisplayName();
 		}
 	}
 	
 	public RemoteHostComboModel() {
-		super( hosts );
+		super(hosts);
 	}
 	
 	public RemoteHost getSelectedRemoteHost() {
 		String host = (String) super.getSelectedItem();
 		
-		for( RemoteHost h: RemoteHostRegistry.getHosts() ) {
-			if ( h.getDisplayName().equals(host) ) {
+		for (RemoteHost h : RemoteHostRegistry.getHosts()) {
+			if (h.getDisplayName().equals(host)) {
 				return h;
 			}
 		}
@@ -48,28 +48,28 @@ public class RemoteHostComboModel extends DefaultComboBoxModel<String> {
 	public void addElement(String anObject) {
 		throw new UnmodifiableSetException();
 	}
-
+	
 	@Override
 	public void insertElementAt(String anObject, int index) {
 		throw new UnmodifiableSetException();
 	}
-
+	
 	@Override
 	public void removeElementAt(int index) {
 		throw new UnmodifiableSetException();
 	}
-
+	
 	@Override
 	public void removeElement(Object anObject) {
 		throw new UnmodifiableSetException();
 	}
-
+	
 	@Override
 	public void removeAllElements() {
 		// TODO Auto-generated method stub
 		super.removeAllElements();
 	}
-
+	
 	
 	
 }
