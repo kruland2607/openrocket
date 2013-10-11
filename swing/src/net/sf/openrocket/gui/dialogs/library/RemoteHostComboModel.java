@@ -45,12 +45,12 @@ public class RemoteHostComboModel extends DefaultComboBoxModel {
 	}
 	
 	@Override
-	public void addElement(String anObject) {
+	public void addElement(Object anObject) {
 		throw new UnmodifiableSetException();
 	}
 	
 	@Override
-	public void insertElementAt(String anObject, int index) {
+	public void insertElementAt(Object anObject, int index) {
 		throw new UnmodifiableSetException();
 	}
 	
