@@ -1,5 +1,6 @@
 package net.sf.openrocket.android.rocket;
 
+import net.sf.openrocket.android.Application;
 import net.sf.openrocket.rocketcomponent.Rocket;
 import android.content.Context;
 import android.util.AttributeSet;
@@ -50,10 +51,11 @@ public class MotorConfigSpinner extends Spinner {
 		public MotorConfigSpinnerAdapter(Context context, Rocket rocket) {
 			super(context, android.R.layout.simple_spinner_item);
 			setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			motorConfigs = rocket.getMotorConfigurationIDs();
+			motorConfigs = rocket.getFlightConfigurationIDs();
 
 			for( String config: motorConfigs ) {
-				this.add(rocket.getMotorConfigurationNameOrDescription(config));
+				String configName = Application.motorDescription.getMotorConfigurationDescription(rocket, config);
+				this.add(configName);
 			}
 
 		}

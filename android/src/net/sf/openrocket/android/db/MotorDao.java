@@ -2,7 +2,6 @@ package net.sf.openrocket.android.db;
 
 import net.sf.openrocket.android.motor.ExtendedThrustCurveMotor;
 import net.sf.openrocket.android.util.AndroidLogWrapper;
-import net.sf.openrocket.android.util.AndroidLogWrapper.LogHelper;
 import net.sf.openrocket.motor.Manufacturer;
 import net.sf.openrocket.motor.Motor;
 import net.sf.openrocket.motor.ThrustCurveMotor;
@@ -269,7 +268,6 @@ public class MotorDao {
 			mCursor.moveToFirst();
 			return hydrateMotor(mCursor);
 		} catch( Exception ex ) {
-			LogHelper.getInstance().debug("whoa!", ex);
 			throw ex;
 		} finally {
 			mCursor.close();

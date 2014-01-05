@@ -2,6 +2,7 @@ package net.sf.openrocket.android.simulation;
 
 
 import net.sf.openrocket.R;
+import net.sf.openrocket.android.Application;
 import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.document.Simulation.Status;
 import net.sf.openrocket.simulation.FlightData;
@@ -42,7 +43,8 @@ public class SimulationListItem extends LinearLayout {
 
 		StringBuilder sb = new StringBuilder();
 		String motorConfig = sim.getOptions().getMotorConfigurationID();
-		sb.append("motors: ").append(sim.getRocket().getMotorConfigurationNameOrDescription(motorConfig));
+		String configName = Application.motorDescription.getMotorConfigurationDescription(sim.getRocket(), motorConfig);
+		sb.append("motors: ").append(configName);
 		Unit distanceUnit = UnitGroup.UNITS_DISTANCE.getDefaultUnit();
 		FlightData flightData  = sim.getSimulatedData();
 		if ( flightData != null ) {

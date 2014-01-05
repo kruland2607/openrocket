@@ -3,6 +3,7 @@ package net.sf.openrocket.android.rocket;
 import java.util.List;
 
 import net.sf.openrocket.R;
+import net.sf.openrocket.android.Application;
 import net.sf.openrocket.android.CurrentRocketHolder;
 import net.sf.openrocket.android.db.DbAdapter;
 import net.sf.openrocket.android.motor.ExtendedThrustCurveMotor;
@@ -14,6 +15,7 @@ import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.motor.Motor;
 import net.sf.openrocket.rocketcomponent.MotorMount;
 import net.sf.openrocket.rocketcomponent.RocketComponent;
+import net.sf.openrocket.rocketvisitors.ListMotorMounts;
 import net.sf.openrocket.unit.UnitGroup;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -107,11 +109,11 @@ public class Configurations extends ExpandableListFragment {
 		Button motorDelay;
 		void setMotor( ExtendedThrustCurveMotor motor ) {
 			this.info.motor = motor;
-			((MotorMount)info.mmt).setMotor(info.config, motor);
+			((MotorMount)info.mmt).getMotorConfiguration().get(info.config).setMotor(motor);
 		}
 		void setDelay( double delay ) {
 			this.info.delay = delay;
-			((MotorMount)info.mmt).setMotorDelay(info.config, delay);
+			((MotorMount)info.mmt).getMotorConfiguration().get(info.config).setEjectionDelay(delay);
 		}
 	}
 
@@ -122,13 +124,13 @@ public class Configurations extends ExpandableListFragment {
 
 			// Note: the magic 1 you see below is so the "no motors" configuration
 			// does not appear in the configuration list.
-			List<MotorMount> mmts = rocketDocument.getRocket().getMotorMounts();
+			List mmts = rocketDocument.getRocket().accept(new ListMotorMounts());
 
 			@Override
 			public int getGroupCount() {
 				// don't show the "no motors" configuration, so we have one less than the
 				// array length.
-				return rocketDocument.getRocket().getMotorConfigurationIDs().length-1;
+				return rocketDocument.getRocket().getFlightConfigurationIDs().length-1;
 			}
 
 			@Override
@@ -139,7 +141,7 @@ public class Configurations extends ExpandableListFragment {
 			@Override
 			public Object getGroup(int groupPosition) {
 				// Skip over the "no motors" configuration
-				String config = rocketDocument.getRocket().getMotorConfigurationIDs()[groupPosition+1];
+				String config = rocketDocument.getRocket().getFlightConfigurationIDs()[groupPosition+1];
 				return config;
 			}
 
@@ -184,8 +186,9 @@ public class Configurations extends ExpandableListFragment {
 				if ( convertView == null ) {
 					convertView = getActivity().getLayoutInflater().inflate(android.R.layout.simple_expandable_list_item_1,null);
 				}
-
-				String configDescription = rocketDocument.getRocket().getMotorConfigurationNameOrDescription((String) getGroup(groupPosition));
+				// FIXME?
+				
+				String configDescription = Application.motorDescription.getMotorConfigurationDescription(rocketDocument.getRocket(), (String) getGroup(groupPosition));
 				((TextView)convertView.findViewById(android.R.id.text1)).setText( configDescription );
 				return convertView;
 			}

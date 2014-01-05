@@ -89,7 +89,7 @@ implements SharedPreferences.OnSharedPreferenceChangeListener
 		AndroidLogWrapper.d(Overview.class, "configurationSpinner = " + configurationSpinner);
 
 		if ( defaultConfiguration != null ) {
-			configurationSpinner.setSelectedConfiguration(defaultConfiguration.getMotorConfigurationID());
+			configurationSpinner.setSelectedConfiguration(defaultConfiguration.getFlightConfigurationID());
 		}
 		configurationSpinner.setOnItemSelectedListener( new AdapterView.OnItemSelectedListener() {
 
@@ -100,9 +100,9 @@ implements SharedPreferences.OnSharedPreferenceChangeListener
 			public void onItemSelected(AdapterView<?> arg0, View arg1,
 					int arg2, long arg3) {
 
-				String selectedConfigId = rocketDocument.getRocket().getMotorConfigurationIDs()[arg2];
+				String selectedConfigId = rocketDocument.getRocket().getFlightConfigurationIDs()[arg2];
 				Configuration config = new Configuration(rocketDocument.getRocket());
-				config.setMotorConfigurationID(selectedConfigId);
+				config.setFlightConfigurationID(selectedConfigId);
 				Coordinate cp = aerodynamicCalculator.getWorstCP(config,
 						new FlightConditions(config),
 						new WarningSet());

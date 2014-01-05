@@ -9,6 +9,7 @@ import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.file.DatabaseMotorFinderWithMissingMotors;
 import net.sf.openrocket.file.GeneralRocketLoader;
 import net.sf.openrocket.file.RocketLoadException;
+import net.sf.openrocket.file.motor.GeneralMotorLoader;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -87,10 +88,10 @@ public class OpenRocketLoaderFragment extends SherlockFragment {
 		protected OpenRocketLoaderResult doInBackground(File... arg0) {
 			AndroidLogWrapper.d(OpenRocketLoaderTask.class, "doInBackgroud");
 			
-			GeneralRocketLoader rocketLoader = new GeneralRocketLoader();
+			GeneralRocketLoader rocketLoader = new GeneralRocketLoader(arg0[0], new DatabaseMotorFinderWithMissingMotors());
 			OpenRocketLoaderResult result = new OpenRocketLoaderResult();
 			try {
-				OpenRocketDocument rocket = rocketLoader.load(arg0[0], new DatabaseMotorFinderWithMissingMotors());
+				OpenRocketDocument rocket = rocketLoader.load();
 				rocket.getDefaultConfiguration().setAllStages();
 				result.rocket = rocket;
 				result.warnings = rocketLoader.getWarnings();

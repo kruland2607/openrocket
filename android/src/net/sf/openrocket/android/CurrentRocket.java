@@ -1,8 +1,13 @@
 package net.sf.openrocket.android;
 
-import static net.sf.openrocket.android.events.Events.*;
+import static net.sf.openrocket.android.events.Events.CONFIGS_CHANGED;
+import static net.sf.openrocket.android.events.Events.MESSAGE_ACTION;
+import static net.sf.openrocket.android.events.Events.SIMS_CHANGED;
+import static net.sf.openrocket.android.events.Events.SIM_COMPLETE;
+import static net.sf.openrocket.android.events.Events.TYPE;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -89,13 +94,13 @@ public class CurrentRocket {
 
 	public synchronized String addNewMotorConfig( Context context ) {
 		isModified = true;
-		String configId = rocketDocument.getRocket().newMotorConfigurationID();
+		String configId = rocketDocument.getRocket().newFlightConfigurationID();
 		notifyMotorConfigChanged(context);
 		return configId;
 	}
 	
 	public synchronized void deleteMotorConfig( Context context, String config ) {
-		rocketDocument.getRocket().removeMotorConfigurationID(config);
+		rocketDocument.getRocket().removeFlightConfigurationID(config);
 		notifyMotorConfigChanged(context);
 	}
 	
@@ -145,10 +150,11 @@ public class CurrentRocket {
 
 		OpenRocketSaver saver = new OpenRocketSaver();
 		StorageOptions options = new StorageOptions();
-		options.setCompressionEnabled(true);
 		options.setSimulationTimeSkip(StorageOptions.SIMULATION_DATA_ALL);
-		saver.save(new File(filename),rocketDocument,options);
+		FileOutputStream fos = new FileOutputStream(new File(filename));
+		saver.save(fos,rocketDocument,options);
 		isModified = false;
+		fos.close();
 	}
 
 }

@@ -19,8 +19,8 @@ public abstract class MissingMotorHelpers {
 
 		Set<ThrustCurveMotorPlaceholder> missingMotors = new HashSet<ThrustCurveMotorPlaceholder>();
 		Configuration config = rocket.getDefaultConfiguration();
-		for( String configID : rocket.getMotorConfigurationIDs() ) {
-			config.setMotorConfigurationID(configID);
+		for( String configID : rocket.getFlightConfigurationIDs() ) {
+			config.setFlightConfigurationID(configID);
 			Iterator<MotorMount> mmts = config.motorIterator();
 			while ( mmts.hasNext() ) {
 				MotorMount mmt = mmts.next();
@@ -44,8 +44,8 @@ public abstract class MissingMotorHelpers {
 		DatabaseMotorFinder finder = new DatabaseMotorFinder();
 		
 		Configuration config = rocket.getDefaultConfiguration();
-		for( String configID : rocket.getMotorConfigurationIDs() ) {
-			config.setMotorConfigurationID(configID);
+		for( String configID : rocket.getFlightConfigurationIDs() ) {
+			config.setFlightConfigurationID(configID);
 			Iterator<MotorMount> mmts = config.motorIterator();
 			while ( mmts.hasNext() ) {
 				MotorMount mmt = mmts.next();
@@ -63,7 +63,7 @@ public abstract class MissingMotorHelpers {
 
 					if ( newMotor != null ) {
 						// one is now here so replace it
-						mmt.setMotor(configID, newMotor);
+						mmt.getMotorConfiguration().get(configID).setMotor(newMotor);
 					}
 				}
 			}

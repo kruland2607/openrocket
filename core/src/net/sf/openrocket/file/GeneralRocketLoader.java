@@ -57,6 +57,12 @@ public class GeneralRocketLoader {
 		this.motorFinder = new DatabaseMotorFinder();
 	}
 	
+	public GeneralRocketLoader(File file, MotorFinder motorFinder) {
+		this.baseFile = file;
+		this.jarURL = null;
+		this.motorFinder = motorFinder;
+	}
+	
 	public GeneralRocketLoader(URL jarURL) {
 		this.baseFile = null;
 		this.jarURL = jarURL;
