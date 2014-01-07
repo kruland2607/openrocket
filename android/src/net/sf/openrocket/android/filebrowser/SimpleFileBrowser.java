@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.sf.openrocket.R;
+import roboguice.activity.RoboSherlockListActivity;
+import roboguice.inject.ContentView;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -25,9 +27,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockListActivity;
-
-public class SimpleFileBrowser extends SherlockListActivity {
+@ContentView(R.layout.simplefilebrowser)
+public class SimpleFileBrowser extends RoboSherlockListActivity {
 
 	private List<File> path = null;
 	private final static File root = new File("/");
@@ -46,7 +47,6 @@ public class SimpleFileBrowser extends SherlockListActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.simplefilebrowser);
 
 		Resources resources = this.getResources();
 		baseDirPrefKey = resources.getString(R.string.PreferenceFileBrowserBaseDirectory);

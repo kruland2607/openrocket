@@ -3,7 +3,6 @@ package net.sf.openrocket.android.rocket;
 import java.util.List;
 
 import net.sf.openrocket.R;
-import net.sf.openrocket.android.Application;
 import net.sf.openrocket.android.CurrentRocketHolder;
 import net.sf.openrocket.android.db.DbAdapter;
 import net.sf.openrocket.android.motor.ExtendedThrustCurveMotor;
@@ -12,6 +11,7 @@ import net.sf.openrocket.android.motor.MotorListDialogFragment;
 import net.sf.openrocket.android.util.AndroidLogWrapper;
 import net.sf.openrocket.android.util.ExpandableListFragment;
 import net.sf.openrocket.document.OpenRocketDocument;
+import net.sf.openrocket.formatting.RocketDescriptor;
 import net.sf.openrocket.motor.Motor;
 import net.sf.openrocket.rocketcomponent.MotorMount;
 import net.sf.openrocket.rocketcomponent.RocketComponent;
@@ -34,10 +34,14 @@ import android.widget.TextView;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.google.inject.Inject;
 
 public class Configurations extends ExpandableListFragment {
 
 	private final static String wizardFrag = "wizardFrag";
+	
+	@Inject
+	private RocketDescriptor rocketFormatter;
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -188,7 +192,7 @@ public class Configurations extends ExpandableListFragment {
 				}
 				// FIXME?
 				
-				String configDescription = Application.motorDescription.getMotorConfigurationDescription(rocketDocument.getRocket(), (String) getGroup(groupPosition));
+				String configDescription = rocketFormatter.format(rocketDocument.getRocket(), (String) getGroup(groupPosition));
 				((TextView)convertView.findViewById(android.R.id.text1)).setText( configDescription );
 				return convertView;
 			}

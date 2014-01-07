@@ -1,10 +1,11 @@
 package net.sf.openrocket.android.simulation;
 
 
+import roboguice.RoboGuice;
 import net.sf.openrocket.R;
-import net.sf.openrocket.android.Application;
 import net.sf.openrocket.document.Simulation;
 import net.sf.openrocket.document.Simulation.Status;
+import net.sf.openrocket.formatting.RocketDescriptor;
 import net.sf.openrocket.simulation.FlightData;
 import net.sf.openrocket.unit.Unit;
 import net.sf.openrocket.unit.UnitGroup;
@@ -13,6 +14,8 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.google.inject.Inject;
 
 public class SimulationListItem extends LinearLayout {
 
@@ -23,13 +26,18 @@ public class SimulationListItem extends LinearLayout {
 	private TextView text2;
 	private Status simStatus;
 	
+	@Inject
+	private RocketDescriptor rocketFormatter;
+	
 	public SimulationListItem(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
+		RoboGuice.injectMembers(context, this);
 		loadViews();
 	}
 
 	public SimulationListItem(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		RoboGuice.injectMembers(context, this);
 		loadViews();
 	}
 
@@ -43,7 +51,7 @@ public class SimulationListItem extends LinearLayout {
 
 		StringBuilder sb = new StringBuilder();
 		String motorConfig = sim.getOptions().getMotorConfigurationID();
-		String configName = Application.motorDescription.getMotorConfigurationDescription(sim.getRocket(), motorConfig);
+		String configName = rocketFormatter.format(sim.getRocket(), motorConfig);
 		sb.append("motors: ").append(configName);
 		Unit distanceUnit = UnitGroup.UNITS_DISTANCE.getDefaultUnit();
 		FlightData flightData  = sim.getSimulatedData();

@@ -1,5 +1,7 @@
 package net.sf.openrocket.android.util;
 
+import net.sf.openrocket.formatting.RocketDescriptor;
+import roboguice.fragment.RoboSherlockFragment;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.ContextMenu;
@@ -18,7 +20,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockFragment;
+import com.google.inject.Inject;
 
 /**
  * 
@@ -31,7 +33,7 @@ import com.actionbarsherlock.app.SherlockFragment;
  *
  * All ASLv2 licensed.
  */
-public class ExpandableListFragment extends SherlockFragment
+public class ExpandableListFragment extends RoboSherlockFragment
 implements OnCreateContextMenuListener, ExpandableListView.OnChildClickListener,
 ExpandableListView.OnGroupCollapseListener, ExpandableListView.OnGroupExpandListener
 {

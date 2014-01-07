@@ -1,15 +1,14 @@
 package net.sf.openrocket.android;
 
 import net.sf.openrocket.android.util.AndroidLogWrapper;
-import net.sf.openrocket.formatting.MotorDescriptionSubstitutor;
 import roboguice.RoboGuice;
 import android.content.pm.ApplicationInfo;
 import android.preference.PreferenceManager;
 
+import com.google.inject.Injector;
+
 public class Application extends android.app.Application {
 
-	public static MotorDescriptionSubstitutor motorDescription = new MotorDescriptionSubstitutor();
-	
 	// Big B boolean so I can synchronize on it.
 	private static Boolean initialized = false;
 
@@ -22,9 +21,11 @@ public class Application extends android.app.Application {
 			// Android does not have a default sax parser set.  This needs to be defined first.
 			System.setProperty("org.xml.sax.driver","org.xmlpull.v1.sax2.Driver");
 
-	        RoboGuice.setBaseApplicationInjector(this, RoboGuice.DEFAULT_STAGE, 
+	        Injector injector = RoboGuice.setBaseApplicationInjector(this, RoboGuice.DEFAULT_STAGE, 
 	                RoboGuice.newDefaultRoboModule(this), new AppModule(this));
 
+	        net.sf.openrocket.startup.Application.setInjector(injector);
+	        
 			initialized = true;
 		}
 	}

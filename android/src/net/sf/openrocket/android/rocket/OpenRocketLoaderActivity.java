@@ -12,6 +12,7 @@ import net.sf.openrocket.android.thrustcurve.TCQueryAction;
 import net.sf.openrocket.android.util.AndroidLogWrapper;
 import net.sf.openrocket.motor.ThrustCurveMotorPlaceholder;
 import net.sf.openrocket.rocketcomponent.Rocket;
+import roboguice.activity.RoboSherlockFragmentActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,9 +22,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-
-public class OpenRocketLoaderActivity extends SherlockFragmentActivity
+public class OpenRocketLoaderActivity extends RoboSherlockFragmentActivity
 implements TCQueryAction.OnTCQueryCompleteListener, OpenRocketLoaderFragment.OnOpenRocketFileLoaded
 {
 

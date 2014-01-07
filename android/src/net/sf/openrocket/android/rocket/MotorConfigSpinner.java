@@ -1,33 +1,44 @@
 package net.sf.openrocket.android.rocket;
 
 import net.sf.openrocket.android.Application;
+import net.sf.openrocket.formatting.RocketDescriptor;
 import net.sf.openrocket.rocketcomponent.Rocket;
+import roboguice.RoboGuice;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
+import com.google.inject.Inject;
+
 public class MotorConfigSpinner extends Spinner {
 
-	public MotorConfigSpinner(Context context, AttributeSet attrs,
-			int defStyle, int mode) {
+	@Inject
+	private RocketDescriptor rocketFormatter;
+	
+	public MotorConfigSpinner(Context context, AttributeSet attrs,int defStyle, int mode) {
 		super(context, attrs, defStyle, mode);
+		RoboGuice.injectMembers(this.getContext(),this);
 	}
 
 	public MotorConfigSpinner(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
+		RoboGuice.injectMembers(this.getContext(),this);
 	}
 
 	public MotorConfigSpinner(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		RoboGuice.injectMembers(this.getContext(),this);
 	}
 
 	public MotorConfigSpinner(Context context, int mode) {
 		super(context, mode);
+		RoboGuice.injectMembers(this.getContext(),this);
 	}
 
 	public MotorConfigSpinner(Context context) {
 		super(context);
+		RoboGuice.injectMembers(this.getContext(),this);
 	}
 
 	public void createAdapter(Rocket rocket ) {
@@ -54,7 +65,7 @@ public class MotorConfigSpinner extends Spinner {
 			motorConfigs = rocket.getFlightConfigurationIDs();
 
 			for( String config: motorConfigs ) {
-				String configName = Application.motorDescription.getMotorConfigurationDescription(rocket, config);
+				String configName = rocketFormatter.format(rocket, config);
 				this.add(configName);
 			}
 
