@@ -5,6 +5,7 @@ import java.util.Locale;
 import net.sf.openrocket.database.ComponentPresetDao;
 import net.sf.openrocket.database.ComponentPresetDatabase;
 import net.sf.openrocket.database.motor.MotorDatabase;
+import net.sf.openrocket.database.motor.ThrustCurveMotorSetDatabase;
 import net.sf.openrocket.formatting.MotorDescriptionSubstitutor;
 import net.sf.openrocket.formatting.RocketDescriptor;
 import net.sf.openrocket.formatting.RocketDescriptorImpl;
@@ -52,7 +53,6 @@ public class AppModule implements Module {
 		}
 
 		binder.bind(Translator.class).toInstance(t);
-
 
 	}
 

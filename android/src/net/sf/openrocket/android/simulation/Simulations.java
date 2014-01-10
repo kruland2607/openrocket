@@ -5,6 +5,8 @@ import net.sf.openrocket.android.CurrentRocketHolder;
 import net.sf.openrocket.android.util.AndroidLogWrapper;
 import net.sf.openrocket.document.OpenRocketDocument;
 import net.sf.openrocket.document.Simulation;
+import roboguice.fragment.RoboSherlockFragment;
+import roboguice.inject.InjectView;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -19,12 +21,11 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
-public class Simulations extends SherlockFragment
+public class Simulations extends RoboSherlockFragment
 implements SharedPreferences.OnSharedPreferenceChangeListener
 {
 
@@ -34,6 +35,7 @@ implements SharedPreferences.OnSharedPreferenceChangeListener
 		public void onSimulationSelected( int simulationId );
 	}
 
+	@InjectView(R.id.openrocketviewerSimulationList)
 	private ListView simulationList;
 	private OnSimulationSelectedListener listener;
 
@@ -42,7 +44,6 @@ implements SharedPreferences.OnSharedPreferenceChangeListener
 			Bundle savedInstanceState) {
 		setHasOptionsMenu(true);
 		View v = inflater.inflate(R.layout.rocket_simulations, container, false);
-		simulationList = (ListView) v.findViewById(R.id.openrocketviewerSimulationList);
 		return v;
 	}
 	

@@ -4,6 +4,7 @@ package net.sf.openrocket.android.rocket;
 import net.sf.openrocket.R;
 import net.sf.openrocket.android.ActivityHelpers;
 import net.sf.openrocket.android.CurrentRocketHolder;
+import net.sf.openrocket.android.configuration.Configurations;
 import net.sf.openrocket.android.events.ChangeEventBroadcastReceiver;
 import net.sf.openrocket.android.simulation.SimulationChart;
 import net.sf.openrocket.android.simulation.SimulationViewActivity;

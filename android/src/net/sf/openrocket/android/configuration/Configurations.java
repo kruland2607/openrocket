@@ -1,4 +1,4 @@
-package net.sf.openrocket.android.rocket;
+package net.sf.openrocket.android.configuration;
 
 import java.util.List;
 
@@ -16,7 +16,6 @@ import net.sf.openrocket.motor.Motor;
 import net.sf.openrocket.rocketcomponent.MotorMount;
 import net.sf.openrocket.rocketcomponent.RocketComponent;
 import net.sf.openrocket.rocketvisitors.ListMotorMounts;
-import net.sf.openrocket.unit.UnitGroup;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -87,37 +86,16 @@ public class Configurations extends ExpandableListFragment {
 		CurrentRocketHolder.getCurrentRocket().deleteMotorConfig( getActivity(), config );
 	}
 	
-	private static class MotorMountInfo {
-
-		private RocketComponent mmt;
-		private String config;
-		private ExtendedThrustCurveMotor motor;
-		private double delay;
-
-		String getMotorMountDescription() {
-			String mmtDesc = mmt.getComponentName();
-			mmtDesc += " (" + UnitGroup.UNITS_MOTOR_DIMENSIONS.toStringUnit( ((MotorMount)mmt).getMotorMountDiameter()) + ")";
-			return mmtDesc;
-		}
-
-		String getMotorDescription() {
-			return motor.getManufacturer().getDisplayName() + " " + motor.getDesignation();
-		}
-
-	}
-
 	class ChildViewHolder {
 		MotorMountInfo info;
 		TextView motorMountName;
 		Button motorDescription;
 		Button motorDelay;
 		void setMotor( ExtendedThrustCurveMotor motor ) {
-			this.info.motor = motor;
-			((MotorMount)info.mmt).getMotorConfiguration().get(info.config).setMotor(motor);
+			this.info.setMotor( motor );
 		}
 		void setDelay( double delay ) {
-			this.info.delay = delay;
-			((MotorMount)info.mmt).getMotorConfiguration().get(info.config).setEjectionDelay(delay);
+			this.info.setDelay(delay);
 		}
 	}
 
@@ -151,19 +129,10 @@ public class Configurations extends ExpandableListFragment {
 
 			@Override
 			public Object getChild(int groupPosition, int childPosition) {
-				MotorMountInfo info = new MotorMountInfo();
-				info.mmt = (RocketComponent)(mmts.get(childPosition));
-
+				MotorMount mnt = (MotorMount)mmts.get(childPosition);
 				String config = (String) getGroup(groupPosition);
-				info.config = config;
-				info.motor = (ExtendedThrustCurveMotor) ((MotorMount)info.mmt).getMotor(config);
-
-				if ( info.motor != null ) {
-					info.delay = ((MotorMount)info.mmt).getMotorDelay(config);
-				} else {
-					info.delay = -1;
-				}
-
+				
+				MotorMountInfo info = new MotorMountInfo(mnt,config);
 				return info;
 			}
 
@@ -214,20 +183,20 @@ public class Configurations extends ExpandableListFragment {
 
 				cvHolder.motorMountName.setText(cvHolder.info.getMotorMountDescription());
 				cvHolder.motorDescription.setOnClickListener( new MotorWizardOnClickListener() );
-				if ( cvHolder.info.motor == null ) {
+				if ( cvHolder.info.getMotor() == null ) {
 					cvHolder.motorDelay.setClickable(false);
 					cvHolder.motorDelay.setOnClickListener(null);
 					cvHolder.motorDescription.setText(R.string.select_motor);
 				} else {
 					cvHolder.motorDelay.setClickable(true);
-					cvHolder.motorDelay.setOnClickListener( new MotorDelayOnClickListener(cvHolder.info.motor) );
+					cvHolder.motorDelay.setOnClickListener( new MotorDelayOnClickListener(cvHolder.info.getMotor()) );
 					cvHolder.motorDescription.setText(cvHolder.info.getMotorDescription());
 				}
-				if( cvHolder.info.delay >=0 ) {
-					if( cvHolder.info.delay == Motor.PLUGGED ) {
+				if( cvHolder.info.getDelay() >=0 ) {
+					if( cvHolder.info.getDelay() == Motor.PLUGGED ) {
 						cvHolder.motorDelay.setText("P");
 					} else {
-						cvHolder.motorDelay.setText( String.valueOf(Math.round(cvHolder.info.delay)));
+						cvHolder.motorDelay.setText( String.valueOf(Math.round(cvHolder.info.getDelay())));
 					}
 				} else {
 					cvHolder.motorDelay.setText(R.string.select_delay);
