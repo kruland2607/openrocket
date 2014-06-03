@@ -15,7 +15,7 @@ import android.util.Xml;
 
 public class DownloadResponseParser {
 
-	private static final String thrustcurveURI = "http://www.thrustcurve.org/2009/DownloadResponse";
+	private static final String thrustcurveURI = "http://www.thrustcurve.org/2014/DownloadResponse";
 
 	private static final String root_tag = "download-response";
 	private static final String results_tag = "results";

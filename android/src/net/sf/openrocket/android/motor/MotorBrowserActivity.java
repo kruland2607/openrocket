@@ -5,6 +5,7 @@ import net.sf.openrocket.android.ActivityHelpers;
 import net.sf.openrocket.android.PreferencesActivity;
 import net.sf.openrocket.android.db.DbAdapter;
 import net.sf.openrocket.android.util.AndroidLogWrapper;
+import roboguice.activity.RoboSherlockFragmentActivity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -12,12 +13,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
-public class MotorBrowserActivity extends SherlockFragmentActivity
+public class MotorBrowserActivity extends RoboSherlockFragmentActivity
 implements MotorListFragment.OnMotorSelectedListener
 {
 

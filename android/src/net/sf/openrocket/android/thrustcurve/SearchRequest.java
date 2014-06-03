@@ -110,7 +110,7 @@ public class SearchRequest {
             w.append("  <type>").append(type).append("</type>\n");
         }
         w.append("<data-fields>*</data-fields>");
-        w.append("<max-results>50</max-results>");
+        w.append("<max-results>-1</max-results>");
         w.append("</search-request>\n");
 		return w.toString();
 	}
