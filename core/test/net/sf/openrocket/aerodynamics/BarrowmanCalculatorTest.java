@@ -14,7 +14,7 @@ import net.sf.openrocket.ServicesForTesting;
 import net.sf.openrocket.motor.MotorConfiguration;
 import net.sf.openrocket.plugin.PluginModule;
 import net.sf.openrocket.rocketcomponent.FlightConfiguration;
-import net.sf.openrocket.rocketcomponent.FlightConfigurationID;
+import net.sf.openrocket.rocketcomponent.FlightConfigurationId;
 import net.sf.openrocket.rocketcomponent.InnerTube;
 import net.sf.openrocket.rocketcomponent.Rocket;
 import net.sf.openrocket.startup.Application;
@@ -46,7 +46,7 @@ public class BarrowmanCalculatorTest {
 	@Test
 	public void testCPSimpleDry() {
 		Rocket rocket = TestRockets.makeEstesAlphaIII();
-		FlightConfiguration config = rocket.getDefaultConfiguration();
+		FlightConfiguration config = rocket.getSelectedConfiguration();
 		AerodynamicCalculator calc = new BarrowmanCalculator();
 		FlightConditions conditions = new FlightConditions(config);
 		WarningSet warnings = new WarningSet();
@@ -63,8 +63,8 @@ public class BarrowmanCalculatorTest {
 	@Test
 	public void testCPSimpleWithMotor() {
 		Rocket rkt = TestRockets.makeEstesAlphaIII();
-		FlightConfiguration config = rkt.getDefaultConfiguration();
-		FlightConfigurationID fcid = config.getFlightConfigurationID();
+		FlightConfiguration config = rkt.getSelectedConfiguration();
+		FlightConfigurationId fcid = config.getFlightConfigurationID();
 		AerodynamicCalculator calc = new BarrowmanCalculator();
 		FlightConditions conditions = new FlightConditions(config);
 		WarningSet warnings = new WarningSet();
@@ -90,7 +90,7 @@ public class BarrowmanCalculatorTest {
 	@Test
 	public void testCPDoubleStrapOn() {
 		Rocket rocket = TestRockets.makeFalcon9Heavy();
-		FlightConfiguration config = rocket.getDefaultConfiguration();
+		FlightConfiguration config = rocket.getSelectedConfiguration();
 		BarrowmanCalculator calc = new BarrowmanCalculator();
 		FlightConditions conditions = new FlightConditions(config);
 		WarningSet warnings = new WarningSet();
