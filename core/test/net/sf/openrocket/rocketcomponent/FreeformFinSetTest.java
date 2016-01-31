@@ -165,7 +165,7 @@ public class FreeformFinSetTest extends BaseTestCase {
 		// This Fin set is constructed to have the same problem.  It is a square and rectangle
 		// where the two trailing edge corners of the rectangle satisfy y_0 = -y_1
 		//
-		// +=> +x
+		//    +=> +x
 		//    0    1    2    3  
 		//    |    |    |    |
 		//     
