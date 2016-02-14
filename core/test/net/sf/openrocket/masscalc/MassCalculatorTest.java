@@ -302,7 +302,7 @@ public class MassCalculatorTest extends BaseTestCase {
 		
 		InnerTube mmt = (InnerTube) rocket.getChild(0).getChild(1).getChild(2);
 		FlightConfigurationId fcid = rocket.getSelectedConfiguration().getId();
-		Motor activeMotor = mmt.getMotorInstance( fcid ).getMotor();
+		Motor activeMotor = mmt.getMotorConfig( fcid ).getMotor();
 		String desig = activeMotor.getDesignation();
 		
 //		String treeDump = rocket.toDebugTree();
