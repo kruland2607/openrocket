@@ -12,7 +12,6 @@ import net.sf.openrocket.material.Material.Type;
 import net.sf.openrocket.motor.Manufacturer;
 import net.sf.openrocket.motor.Motor;
 import net.sf.openrocket.motor.MotorConfiguration;
-import net.sf.openrocket.motor.MotorInstanceId;
 import net.sf.openrocket.motor.ThrustCurveMotor;
 import net.sf.openrocket.preset.ComponentPreset;
 import net.sf.openrocket.preset.ComponentPresetFactory;
@@ -97,7 +96,7 @@ public class TestRockets {
 	} 
 	
 	// This function is used for unit, integration tests, DO NOT CHANGE (without updating tests).
-	private static MotorConfiguration generateMotorInstance_A8_18mm(){
+	private static Motor generateMotor_A8_18mm(){
 		// public ThrustCurveMotor(Manufacturer manufacturer, String designation, String description,
 		//			Motor.Type type, double[] delays, double diameter, double length,
 		//			double[] time, double[] thrust,
@@ -109,11 +108,11 @@ public class TestRockets {
 				new Coordinate[] {
 					new Coordinate(0.035, 0, 0, 0.0164),new Coordinate(.035, 0, 0, 0.0145),new Coordinate(.035, 0, 0, 0.0131)}, 
 				"digest A8 test");
-		return new MotorConfiguration(mtr);
+		return mtr;
 	}
 	
 	// This function is used for unit, integration tests, DO NOT CHANGE (without updating tests).
-	private static MotorConfiguration generateMotorInstance_B4_18mm(){
+	private static Motor generateMotor_B4_18mm(){
 		// public ThrustCurveMotor(Manufacturer manufacturer, String designation, String description,
 		//			Motor.Type type, double[] delays, double diameter, double length,
 		//			double[] time, double[] thrust,
@@ -125,11 +124,11 @@ public class TestRockets {
 				new Coordinate[] {
 					new Coordinate(0.035, 0, 0, 0.0195),new Coordinate(.035, 0, 0, 0.0155),new Coordinate(.035, 0, 0, 0.013)}, 
 				"digest B4 test");
-		return new MotorConfiguration(mtr);
+		return mtr;
 	}
 	
 	// This function is used for unit, integration tests, DO NOT CHANGE (without updating tests).
-	private static MotorConfiguration generateMotorInstance_C6_18mm(){
+	private static Motor generateMotor_C6_18mm(){
 		// public ThrustCurveMotor(Manufacturer manufacturer, String designation, String description,
 		//			Motor.Type type, double[] delays, double diameter, double length,
 		//			double[] time, double[] thrust,
@@ -141,11 +140,11 @@ public class TestRockets {
 				new Coordinate[] {
 					new Coordinate(0.035, 0, 0, 0.0227),new Coordinate(.035, 0, 0, 0.0165),new Coordinate(.035, 0, 0, 0.012)}, 
 				"digest C6 test");
-		return new MotorConfiguration(mtr);
+		return mtr;
 	}
 	
 	// This function is used for unit, integration tests, DO NOT CHANGE (without updating tests).
-	private static MotorConfiguration generateMotorInstance_D21_18mm(){
+	private static Motor generateMotor_D21_18mm(){
 		ThrustCurveMotor mtr = new ThrustCurveMotor(
 			Manufacturer.getManufacturer("AeroTech"),"D21", "Desc", 
 			Motor.Type.SINGLE, new double[] {}, 0.018, 0.07,
@@ -153,11 +152,11 @@ public class TestRockets {
 			new Coordinate[] {
 				new Coordinate(.035, 0, 0, 0.025),new Coordinate(.035, 0, 0, .020),new Coordinate(.035, 0, 0, 0.0154)}, 
 			"digest D21 test");
-	    return new MotorConfiguration(mtr);
+	    return mtr;
 	}
 	
 	// This function is used for unit, integration tests, DO NOT CHANGE (without updating tests).
-	private static MotorConfiguration generateMotorInstance_M1350_75mm(){
+	private static Motor generateMotor_M1350_75mm(){
 		// public ThrustCurveMotor(Manufacturer manufacturer, String designation, String description,
 		//			Motor.Type type, double[] delays, double diameter, double length,
 		//			double[] time, double[] thrust,
@@ -169,11 +168,11 @@ public class TestRockets {
 				new Coordinate[] {
 					new Coordinate(.311, 0, 0, 4.808),new Coordinate(.311, 0, 0, 3.389),new Coordinate(.311, 0, 0, 1.970)}, 
 				"digest M1350 test");
-		return new MotorConfiguration(mtr);
+		return mtr;
 	}
 	
 	// This function is used for unit, integration tests, DO NOT CHANGE (without updating tests).
-	private static MotorConfiguration generateMotorInstance_G77_29mm(){
+	private static Motor generateMotor_G77_29mm(){
 		// public ThrustCurveMotor(Manufacturer manufacturer, String designation, String description,
 		//			Motor.Type type, double[] delays, double diameter, double length,
 		//			double[] time, double[] thrust,
@@ -185,7 +184,7 @@ public class TestRockets {
 				new Coordinate[] {
 					new Coordinate(.062, 0, 0, 0.123),new Coordinate(.062, 0, 0, .0935),new Coordinate(.062, 0, 0, 0.064)}, 
 				"digest G77 test");
-		return new MotorConfiguration(mtr);
+		return mtr;
 	}
 	
 	// 
@@ -461,34 +460,39 @@ public class TestRockets {
 				inner.setMotorMount( true);
 				
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_A8_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[0]);
+					Motor mtr =	TestRockets.generateMotor_A8_18mm();
+					motorConfig.setMotor( mtr);
 					motorConfig.setEjectionDelay(0.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					inner.setMotorInstance( fcid[0], motorConfig);
+					inner.setMotorConfig( motorConfig, fcid[0]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_B4_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[1]);
+					Motor mtr =	TestRockets.generateMotor_B4_18mm();
+					motorConfig.setMotor( mtr);
 					motorConfig.setEjectionDelay(3.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					inner.setMotorInstance( fcid[1], motorConfig);
+					inner.setMotorConfig( motorConfig, fcid[1]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_C6_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[2]);
+					Motor mtr =	TestRockets.generateMotor_C6_18mm();
 					motorConfig.setEjectionDelay(3.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					inner.setMotorInstance( fcid[2], motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[2]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_C6_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[3]);
+					Motor mtr =	TestRockets.generateMotor_C6_18mm();
 					motorConfig.setEjectionDelay(5.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					inner.setMotorInstance( fcid[3], motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[3]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_C6_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[4]);
+					Motor mtr =	TestRockets.generateMotor_C6_18mm();
 					motorConfig.setEjectionDelay(7.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					inner.setMotorInstance( fcid[4], motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[4]);
 				}
 			}
 		
@@ -517,6 +521,7 @@ public class TestRockets {
 		bodytube.setMaterial(material);
 		finset.setMaterial(material);
 		
+		rocket.setSelectedConfiguration( rocket.getFlightConfiguration( fcid[0]));
 		rocket.getSelectedConfiguration().setAllStages();
 		rocket.enableEvents();
 		return rocket;
@@ -531,6 +536,12 @@ public class TestRockets {
 		AxialStage sustainerStage = new AxialStage();
 		sustainerStage.setName("Sustainer Stage");
 		rocket.addChild(sustainerStage);
+		FlightConfigurationId fcid[] = new FlightConfigurationId[5];
+		for( int i=0; i< fcid.length; ++i){
+			fcid[i] = new FlightConfigurationId();
+			rocket.createFlightConfiguration(fcid[i]);
+		}
+		FlightConfiguration selectedConfiguration = rocket.getFlightConfiguration(fcid[0]);
 				
 		double noseconeLength = 0.07;
 		double noseconeRadius = 0.012;
@@ -592,39 +603,39 @@ public class TestRockets {
 				inner.setMotorMount( true);
 				
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_A8_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[0]);
+					Motor mtr = TestRockets.generateMotor_A8_18mm();
 					motorConfig.setEjectionDelay(0.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					FlightConfigurationId motorConfigId = rocket.getSelectedConfiguration().getFlightConfigurationID();
-					inner.setMotorInstance( motorConfigId, motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[0]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_B4_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[1]);
+					Motor mtr = TestRockets.generateMotor_B4_18mm();
 					motorConfig.setEjectionDelay(3.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					FlightConfigurationId motorConfigId = new FlightConfigurationId();
-					inner.setMotorInstance( motorConfigId, motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[1]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_C6_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[2]);
+					Motor mtr = TestRockets.generateMotor_C6_18mm();
 					motorConfig.setEjectionDelay(3.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					FlightConfigurationId motorConfigId = new FlightConfigurationId();
-					inner.setMotorInstance( motorConfigId, motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[2]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_C6_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[3]);
+					Motor mtr = TestRockets.generateMotor_C6_18mm();
 					motorConfig.setEjectionDelay(5.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					FlightConfigurationId motorConfigId = new FlightConfigurationId();
-					inner.setMotorInstance( motorConfigId, motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[3]);
 				}
 				{
-					MotorConfiguration motorConfig = TestRockets.generateMotorInstance_C6_18mm();
+					MotorConfiguration motorConfig = new MotorConfiguration(inner,fcid[4]);
+					Motor mtr = TestRockets.generateMotor_C6_18mm();
 					motorConfig.setEjectionDelay(7.0);
-					motorConfig.setID( new MotorInstanceId( inner.getName(), 1) );
-					FlightConfigurationId motorConfigId = new FlightConfigurationId();
-					inner.setMotorInstance( motorConfigId, motorConfig);
+					motorConfig.setMotor( mtr);
+					inner.setMotorConfig( motorConfig, fcid[4]);
 				}
 			}
 		
@@ -695,14 +706,15 @@ public class TestRockets {
 
 			boosterMMT.setMotorMount(true);
 			{
-				FlightConfigurationId mcid = rocket.getSelectedConfiguration().getFlightConfigurationID();
-				MotorConfiguration motorConfig= generateMotorInstance_D21_18mm();
-				motorConfig.setID( new MotorInstanceId( boosterMMT.getName(), 1) );
-				boosterMMT.setMotorInstance( mcid, motorConfig);
+				MotorConfiguration motorConfig= new MotorConfiguration(boosterMMT,fcid[0]);
+				Motor mtr = generateMotor_D21_18mm();
+				motorConfig.setMotor(mtr);
+				boosterMMT.setMotorConfig( motorConfig, fcid[0]);
 			}
 
 		}
 		rocket.getSelectedConfiguration().setAllStages();
+		rocket.setSelectedConfiguration( selectedConfiguration );
 		rocket.enableEvents();
 		return rocket;
 	}
@@ -749,16 +761,18 @@ public class TestRockets {
 		FlightConfigurationId fcid = config.getFlightConfigurationID();
 		
 		ThrustCurveMotor motor = getTestMotor();
-		MotorConfiguration instance = new MotorConfiguration(motor);
+		MotorConfiguration instance = new MotorConfiguration( bodytube, fcid );
+		instance.setMotor( motor);
 		instance.setEjectionDelay(5);
 		
-		bodytube.setMotorInstance(fcid, instance);
+		bodytube.setMotorConfig( instance, fcid);
 		bodytube.setMotorOverhang(0.005);
 		
 		config.setAllStages();
 		rocket.enableEvents();
 		return rocket;
 	}
+	
 	
 	
 	public static Rocket makeBigBlue() {
@@ -1016,7 +1030,8 @@ public class TestRockets {
 	public static Rocket makeFalcon9Heavy() {
 		Rocket rocket = new Rocket();
 		rocket.setName("Falcon9H Scale Rocket");
-		FlightConfiguration config = rocket.getSelectedConfiguration();
+		FlightConfiguration selConfig = rocket.getSelectedConfiguration();
+		FlightConfigurationId selFCID = selConfig.getFlightConfigurationID();
 		
 		// ====== Payload Stage ======
 		// ====== ====== ====== ======
@@ -1091,11 +1106,12 @@ public class TestRockets {
 			coreBody.setMotorMount(true);
 			coreStage.addChild( coreBody);
 			{
-				MotorConfiguration motorInstance = TestRockets.generateMotorInstance_M1350_75mm();
-				motorInstance.setID( new MotorInstanceId( coreBody.getName(), 1) );
+				MotorConfiguration motorConfig = new MotorConfiguration(coreBody, selFCID);
+				Motor mtr = TestRockets.generateMotor_M1350_75mm();
+				motorConfig.setMotor( mtr);
 				coreBody.setMotorMount( true);
-				FlightConfigurationId motorConfigId = config.getFlightConfigurationID();
-				coreBody.setMotorInstance( motorConfigId, motorInstance);	 
+				FlightConfigurationId motorConfigId = selConfig.getFlightConfigurationID();
+				coreBody.setMotorConfig( motorConfig, motorConfigId);	 
 			}
 			
 			TrapezoidFinSet coreFins = new TrapezoidFinSet();
@@ -1152,18 +1168,114 @@ public class TestRockets {
 					boosterMotorTubes.setClusterScale(1.0);
 					boosterBody.addChild( boosterMotorTubes);
 					
-					FlightConfigurationId motorConfigId = config.getFlightConfigurationID();
-					MotorConfiguration motorInstance = TestRockets.generateMotorInstance_G77_29mm();
-					motorInstance.setID( new MotorInstanceId( boosterMotorTubes.getName(), 1) );
-					boosterMotorTubes.setMotorInstance( motorConfigId, motorInstance);
+					FlightConfigurationId motorConfigId = selConfig.getFlightConfigurationID();
+					MotorConfiguration motorConfig = new MotorConfiguration( boosterMotorTubes, selFCID);
+					Motor mtr = TestRockets.generateMotor_G77_29mm();
+					motorConfig.setMotor(mtr);
+					boosterMotorTubes.setMotorConfig( motorConfig, motorConfigId);
 					boosterMotorTubes.setMotorOverhang(0.01234);
 				}
 			}
 		}
 		
 		rocket.enableEvents();
-		config.setAllStages();
+		rocket.setSelectedConfiguration(selConfig);
+		selConfig.setAllStages();
 		
+		return rocket;
+	}
+	
+	// This a scale V2 rocket 
+	// WARNING:  as of February 1, 2016, this is not yet a valid rocket.  
+	//           may require changes to the FreeformFinSet class
+	public static final Rocket makeV2(){
+		Rocket rocket = new Rocket();
+		rocket.setName("V-2 Scale Model ");
+		
+		// make stage
+		AxialStage stage = new AxialStage();
+		stage.setName("Stage 1");
+		rocket.addChild(stage);
+		
+		final double SKIN_THICKNESS = 0.001;
+		
+		// make nose cone 
+		NoseCone nose = new NoseCone();
+		nose.setName("nose");
+		nose.setMassOverridden(true);
+		nose.setOverrideMass( 0.038 ); 
+		nose.setLength(0.21);
+		nose.setThickness( SKIN_THICKNESS);
+		nose.setType(Shape.OGIVE);
+		nose.setShapeParameter(1.0);
+		nose.setAftRadius(0.033);
+		nose.setAftShoulderRadius(0.031);
+		nose.setAftShoulderLength( 0.04 );
+        nose.setAftShoulderThickness(0.001);
+        nose.setAftShoulderCapped(false);
+        stage.addChild(nose);
+        
+		// make body tube 
+		BodyTube body = new BodyTube( 0.2, 0.33, SKIN_THICKNESS);
+		body.setName("body");
+		body.setOuterRadiusAutomatic( true);
+		stage.addChild(body );
+		
+		{ // make boat tail 
+			Transition boattail = new Transition();
+			boattail.setName("Transition");
+			boattail.setMassOverridden( true);
+	        boattail.setOverrideMass( 0.036);
+	        boattail.setLength( 0.14 );
+	        boattail.setThickness( SKIN_THICKNESS);
+	        boattail.setType(Shape.OGIVE);
+			boattail.setShapeParameter(1.0);
+			boattail.setForeRadiusAutomatic(true);
+			boattail.setAftRadius( 0.02);
+			
+			boattail.setForeShoulderRadius(0.031);
+			boattail.setForeShoulderLength( 0.04 );
+			boattail.setForeShoulderThickness(0.001);
+			boattail.setForeShoulderCapped(false);
+        
+			boattail.setAftShoulderLength( 0.0 );
+			boattail.setAftShoulderCapped(false);
+  		    stage.addChild( boattail);
+  		    
+  		    { // freeform fins -- on boattail
+  				FreeformFinSet fins = new FreeformFinSet();
+  				fins.setName("fins");
+  				fins.setFinCount(4);
+  				Coordinate[] points = new Coordinate[] { 
+  					      new Coordinate( 0, 0)
+  						, new Coordinate( 0.09,   0.0587)
+  						, new Coordinate( 0.1666, 0.0590)
+  						, new Coordinate( 0.1668, 0.0294)
+  						, new Coordinate( 0.1568, 0.0257)
+  						, new Coordinate( 0.1565, 0.0082)
+  						, new Coordinate( 0.1388, 0.0)
+  				};
+  				try{ 
+  					fins.setPoints( points);
+  				}catch( IllegalFinPointException fpe ){
+  					System.err.println("Error building built-in rocket: V2 from TestRockets factory. Aborting and exiting.");
+  					System.exit(-1);
+  				}
+  				fins.setRelativePosition( Position.TOP );
+  				fins.setAxialOffset(0);
+  				fins.setThickness(0.0024);
+  				fins.setCrossSection( CrossSection.AIRFOIL );
+  	                
+  				fins.setTabHeight( 0.020);
+  	            fins.setTabLength( 0.12 );
+  	            fins.setTabRelativePosition( RocketComponent.Position.TOP );
+  	            fins.setTabShift( 0.02 );
+  	            boattail.addChild( fins);
+  		    }
+		}
+          
+		rocket.enableEvents();
+		rocket.getSelectedConfiguration().setAllStages();
 		return rocket;
 	}
 	
@@ -1269,11 +1381,12 @@ public class TestRockets {
 		
 		// create motor config and add a motor to it
 		ThrustCurveMotor motor = getTestMotor();
-		MotorConfiguration motorInst = new MotorConfiguration(motor);
-		motorInst.setEjectionDelay(5);
+		MotorConfiguration motorConfig = new MotorConfiguration(innerTube, fcid);
+		motorConfig.setMotor(motor);
+		motorConfig.setEjectionDelay(5);
 		
 		// add motor config to inner tube (motor mount)
-		innerTube.setMotorInstance(fcid, motorInst);
+		innerTube.setMotorConfig( motorConfig, fcid);
 		
 		rocket.enableEvents();
 		return OpenRocketDocumentFactory.createDocumentFromRocket(rocket);
@@ -1305,11 +1418,12 @@ public class TestRockets {
 		
 		// create motor config and add a motor to it
 		ThrustCurveMotor motor = getTestMotor();
-		MotorConfiguration motorConfig = new MotorConfiguration(motor);
+		MotorConfiguration motorConfig = new MotorConfiguration(innerTube, fcid);
+		motorConfig.setMotor(motor);
 		motorConfig.setEjectionDelay(5);
 		
 		// add motor config to inner tube (motor mount)
-		innerTube.setMotorInstance(fcid, motorConfig);
+		innerTube.setMotorConfig(motorConfig, fcid);
 				
 		OpenRocketDocument rocketDoc = OpenRocketDocumentFactory.createDocumentFromRocket(rocket);
 		
@@ -1463,12 +1577,14 @@ public class TestRockets {
 		bodyTube.addChild(innerTube);
 		
 		// make inner tube with motor mount flag set
-		MotorConfiguration inst = new MotorConfiguration(getTestMotor());
-		innerTube.setMotorInstance(fcid, inst);
+		MotorConfiguration motorConfig = new MotorConfiguration(innerTube, fcid);
+		Motor mtr = getTestMotor();
+		motorConfig.setMotor( mtr);
+		innerTube.setMotorConfig(motorConfig,fcid);
 		
 		// set ignition parameters for motor mount
 		// inst.setIgnitionEvent( IgnitionEvent.AUTOMATIC);
-		inst.setIgnitionDelay(2);
+		motorConfig.setIgnitionDelay(2);
 		
 		rocket.enableEvents();
 		return OpenRocketDocumentFactory.createDocumentFromRocket(rocket);

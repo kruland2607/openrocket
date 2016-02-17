@@ -25,25 +25,37 @@ public class MassCalculator implements Monitorable {
 	public static enum MassCalcType {
 		NO_MOTORS {
 			@Override
-			public Coordinate getCG(Motor motor) {
-				return Coordinate.NUL;
+			public double getCGx(Motor motor) {
+				return 0;
 			}
-			
+			@Override
+			public double getMass(Motor motor) {
+				return 0;
+			}
 		},
 		LAUNCH_MASS {
 			@Override
-			public Coordinate getCG(Motor motor) {
-				return motor.getLaunchCG();
+			public double getCGx(Motor motor) {
+				return motor.getLaunchCGx();
+			}
+			@Override
+			public double getMass(Motor motor) {
+				return motor.getLaunchMass();
 			}
 		},
 		BURNOUT_MASS {
 			@Override
-			public Coordinate getCG(Motor motor) {
-				return motor.getEmptyCG();
+			public double getCGx(Motor motor) {
+				return motor.getBurnoutCGx();
+			}
+			@Override
+			public double getMass(Motor motor) {
+				return motor.getBurnoutMass();
 			}
 		};
 		
-		public abstract Coordinate getCG(Motor motor);
+		public abstract double getMass(Motor motor);
+		public abstract double getCGx(Motor motor);
 		
 		/**
 		 * Compute the cg contribution of the motor relative to the rocket's coordinates
@@ -52,16 +64,21 @@ public class MassCalculator implements Monitorable {
 		 * @return
 		 */
 		public Coordinate getCG(MotorConfiguration motorConfig) {
-			Coordinate cg = getCG(motorConfig.getMotor());
-			cg = cg.add(motorConfig.getPosition());
+			Motor mtr = motorConfig.getMotor();
+			double mass = getMass(mtr);
+			Coordinate cg = motorConfig.getPosition().add( getCGx(mtr), 0, 0, mass);
 			
 			RocketComponent motorMount = (RocketComponent) motorConfig.getMount();
-			Coordinate totalCG = new Coordinate();
+			Coordinate totalCM = new Coordinate();
 			for (Coordinate cord : motorMount.toAbsolute(cg) ) {
-				totalCG = totalCG.average(cord);
+				totalCM = totalCM.average(cord);
 			}
 
-			return totalCG;
+			return totalCM;
+		}
+		
+		public Coordinate getCM( Motor motor ){
+			return new Coordinate( getCGx(motor), 0, 0, getMass(motor));
 		}
 	}
 	
@@ -146,7 +163,7 @@ public class MassCalculator implements Monitorable {
 			return MassData.ZERO_DATA;
 		}
 		
-//		// vvvv DEVEL vvvv
+		// vvvv DEVEL vvvv
 //		//String massFormat = "    [%2s]: %-16s    %6s x %6s  =  %6s += %6s  @ (%s, %s, %s )";
 //		String inertiaFormat = "    [%2s](%2s): %-16s    %6s  %6s";
 //		if( debug){
@@ -154,10 +171,10 @@ public class MassCalculator implements Monitorable {
 //			//System.err.println(String.format(massFormat, " #", "<Designation>","Mass","Count","Config","Sum", "x","y","z"));
 //			System.err.println(String.format(inertiaFormat, " #","ct", "<Designation>","I_ax","I_tr"));
 //		}
-//		// ^^^^ DEVEL ^^^^
+		// ^^^^ DEVEL ^^^^
 
 		MassData allMotorData = MassData.ZERO_DATA;
-		//int motorIndex = 0;
+//		int motorIndex = 0;
 		for (MotorConfiguration mtrConfig : config.getActiveMotors() ) {
 			ThrustCurveMotor mtr = (ThrustCurveMotor) mtrConfig.getMotor();
 			
@@ -168,7 +185,7 @@ public class MassCalculator implements Monitorable {
 			double motorXPosition = mtrConfig.getX();  // location of motor from mount
 
 			
-			Coordinate localCM = type.getCG( mtr );  // CoM from beginning of motor
+			Coordinate localCM = type.getCM( mtr );  // CoM from beginning of motor
 			localCM = localCM.setWeight( localCM.weight * instanceCount);
 			// a *bit* hacky :P
 			Coordinate curMotorCM = localCM.setX( localCM.x + locations[0].x + motorXPosition );
@@ -202,15 +219,15 @@ public class MassCalculator implements Monitorable {
 			allMotorData = allMotorData.add( configData );
 			
 			// BEGIN DEVEL
-			//if( debug){
-				// // Inertia
-				// System.err.println(String.format( inertiaFormat, motorIndex, instanceCount, mtr.getDesignation(), Ir, It));
-				// // mass only
-				//double singleMass = type.getCG( mtr ).weight;
-				//System.err.println(String.format( massFormat, motorIndex, mtr.getDesignation(), 
-				//		singleMass, instanceCount, curMotorCM.weight, allMotorData.getMass(),curMotorCM.x, curMotorCM.y, curMotorCM.z ));
-			//}
-			//motorIndex++;
+//			if( debug){
+//				 // Inertia
+//				 //System.err.println(String.format( inertiaFormat, motorIndex, instanceCount, mtr.getDesignation(), Ir, It));
+//				 // mass only
+//				double singleMass = type.getCG( mtr ).weight;
+//				System.err.println(String.format( massFormat, motorIndex, mtr.getDesignation(), 
+//						singleMass, instanceCount, curMotorCM.weight, allMotorData.getMass(),curMotorCM.x, curMotorCM.y, curMotorCM.z ));
+//			}
+//			motorIndex++;
 			// END DEVEL	
 		}
 	
@@ -372,22 +389,31 @@ public class MassCalculator implements Monitorable {
 	}
 	
 	private MassData calculateAssemblyMassData(RocketComponent component, String indent) {
-		
-		Coordinate parentCM = component.getComponentCG();
-		double parentIx = component.getRotationalUnitInertia() * parentCM.weight;
-		double parentIt = component.getLongitudinalUnitInertia() * parentCM.weight;
-		MassData parentData = new MassData( parentCM, parentIx, parentIt);
-		
+		Coordinate thisCM = component.getComponentCG();
+		double parentIx = component.getRotationalUnitInertia() * thisCM.weight;
+		double parentIt = component.getLongitudinalUnitInertia() * thisCM.weight;
 		if (!component.getOverrideSubcomponents()) {
-			if (component.isMassOverridden())
-				parentCM = parentCM.setWeight(MathUtil.max(component.getOverrideMass(), MIN_MASS));
-			if (component.isCGOverridden())
-				parentCM = parentCM.setXYZ(component.getOverrideCG());
+			if (component.isMassOverridden()){
+				thisCM = thisCM.setWeight(MathUtil.max(component.getOverrideMass(), MIN_MASS));
+			}
+			if (component.isCGOverridden()){
+				thisCM = thisCM.setX( component.getOverrideCGX());
+			}
 		}
-		if(( debug) &&( 0 < component.getChildCount()) && (MIN_MASS < parentCM.weight)){
-			System.err.println(String.format("%-32s: %s ",indent+">>["+ component.getName()+"]", parentData.toDebug() ));
+	        
+		// default if not instanced
+		MassData resultantData = new MassData( thisCM, parentIx, parentIt);
+
+		if( debug && (MIN_MASS < thisCM.weight)){
+			System.err.println(String.format("%-32s: %s ",indent+"ea["+ component.getName()+"]", thisCM ));
+			if( component.isMassOverridden() && component.isMassOverridden() && component.getOverrideSubcomponents()){
+				System.err.println(indent+"   ?["+ component.isMassOverridden()+"]["+ 
+						component.isMassOverridden()+"]["+
+						component.getOverrideSubcomponents()+"]");
+			}
 		}
 		
+			
 		MassData childrenData = MassData.ZERO_DATA;
 		// Combine data for subcomponents
 		for (RocketComponent child : component.getChildren()) {
@@ -401,30 +427,32 @@ public class MassCalculator implements Monitorable {
 
 			childrenData  = childrenData.add( childData );
 		}
-
 		
-		MassData resultantData = parentData; // default if not instanced
+		resultantData = resultantData.add( childrenData);
+		if( debug &&( 0 < component.getChildCount())){
+			System.err.println(String.format("%-32s: %s ",indent+"++["+ component.getName()+"]", resultantData.toDebug() ));
+		}
+		
 		// compensate for component-instancing propogating to children's data 
 		int instanceCount = component.getInstanceCount();
-		boolean hasChildren = ( 0 < component.getChildCount());
-		if (( 1 < instanceCount )&&( hasChildren )){
-//			if(( debug )){
-//				System.err.println(String.format("%s  Found instanceable with %d children: %s (t= %s)", 
-//						indent, component.getInstanceCount(), component.getName(), component.getClass().getSimpleName() ));
-//			}
+		if ( 1 < instanceCount ){
+			if(( debug )){
+				System.err.println(String.format("%s  Found instanceable with %d children: %s (t= %s)", 
+						indent, component.getInstanceCount(), component.getName(), component.getClass().getSimpleName() ));
+			}
 			
 			final double curIxx = childrenData.getIxx(); // MOI about x-axis
 			final double curIyy = childrenData.getIyy(); // MOI about y axis
 			final double curIzz = childrenData.getIzz(); // MOI about z axis
 			
-			Coordinate eachCM = childrenData.cm;
+			Coordinate eachCM = resultantData.cm;
 			MassData instAccumData = new MassData();  // accumulator for instance MassData
 			Coordinate[] instanceLocations = ((Instanceable) component).getInstanceOffsets();
          	for( Coordinate curOffset : instanceLocations ){
-//         		if( debug){
-//         			//System.err.println(String.format("%-32s: %s", indent+"  inst Accum", instAccumData.toCMDebug() ));
-//         			System.err.println(String.format("%-32s: %s", indent+"  inst Accum", instAccumData.toDebug() ));
-//				}
+         		if( debug){
+         			//System.err.println(String.format("%-32s: %s", indent+"  inst Accum", instAccumData.toCMDebug() ));
+         			System.err.println(String.format("%-32s: %s", indent+"  inst Accum", instAccumData.toDebug() ));
+				}
          		
 				Coordinate instanceCM = curOffset.add(eachCM);
 				
@@ -434,15 +462,13 @@ public class MassCalculator implements Monitorable {
 				//    and add to the total
 				instAccumData = instAccumData.add( instanceData);
 			}
-			
-         	childrenData = instAccumData;
-		}
 
-		// combine the parent's and children's data
-		resultantData = parentData.add( childrenData);
-		
-		if( debug){
-			System.err.println(String.format("%-32s: %s ", indent+"<==>["+component.getName()+"][asbly]", resultantData.toDebug()));
+    		// store the instanced data
+    		resultantData = instAccumData;
+    		
+    		if( debug && (1 < component.getInstanceCount()) && (MIN_MASS < thisCM.weight)){
+    			System.err.println(String.format("%-32s: %s ", indent+"x"+component.getInstanceCount()+"["+component.getName()+"][asbly]", resultantData.toDebug()));
+    		}
 		}
 
 		// move to parent's reference point
@@ -472,9 +498,9 @@ public class MassCalculator implements Monitorable {
 				double oldx = resultantData.getCM().x;
 				double newx = component.getOverrideCGX();
 				Coordinate delta = new Coordinate(newx-oldx, 0, 0);
-				if(debug){
-					System.err.println(String.format("%-32s: x: %g => %g  (%g)", indent+"    88", oldx, newx, delta.x)); 
-				}
+//				if(debug){
+//					System.err.println(String.format("%-32s: x: %g => %g  (%g)", indent+"    88", oldx, newx, delta.x)); 
+//				}
 				resultantData = resultantData.move( delta );
 			}
 		}
